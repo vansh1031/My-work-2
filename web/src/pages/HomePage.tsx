@@ -27,6 +27,7 @@ function FactoryCard({ factory, selected, index, onSelect, onOpen }: { factory: 
         role="button"
         tabIndex={0}
         aria-current={selected}
+        aria-label={`${factory.name}, ${factory.city}, ${factory.state}, ${factory.country}`}
         data-testid={`factory-card-${factory.id}`}
         onClick={onSelect}
         onKeyDown={(e) => {

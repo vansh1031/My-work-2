@@ -4,7 +4,7 @@
   "globe": {
     "idleRotationDegreesPerSecond": 2,
     "nearDistanceKm": 600,
-    "overviewZoom": 1.6,
+    "overviewZoom": 2.1,
     "countryZoom": 3.4,
     "stateZoom": 5.2,
     "cityZoom": 8.5,

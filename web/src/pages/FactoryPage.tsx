@@ -28,6 +28,7 @@ function MachineCard({ machine, selected, index, onSelect, onOpen }: { machine: 
         role="button"
         tabIndex={0}
         aria-current={selected}
+        aria-label={`${machine.name}, ${machine.code}, ${config.app.statusLabels[machine.current?.status ?? "unknown"]}`}
         data-testid={`machine-card-${machine.code}`}
         onClick={onSelect}
         onKeyDown={(e) => {

@@ -1,0 +1,49 @@
+# Starts the database and the server on this computer.
+#   Start:  docker compose up -d        (first time: add --build)
+#   Stop:   docker compose down          (data is kept)
+#   Logs:   docker compose logs -f app
+# Then open http://localhost:4000 in a browser, or start the desktop app.
+# Settings here are explained in docs/config.md.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-atlas-local-password}
+      POSTGRES_DB: factory_atlas
+    # For development with "npm run dev", remove the # from the next two lines so Windows can reach the database.
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas -d factory_atlas"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://atlas:${DB_PASSWORD:-atlas-local-password}@db:5432/factory_atlas
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-change-me-now}
+      # Adds 6 sample factories on an empty database. Set to "false" for a real client installation.
+      SEED_SAMPLE_DATA: ${SEED_SAMPLE_DATA:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "${PORT:-4000}:4000"
+    volumes:
+      # Edit files in ./config, then run: docker compose restart app
+      - ./config:/app/config:ro
+      - app-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  app-data:

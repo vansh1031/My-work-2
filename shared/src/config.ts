@@ -59,7 +59,7 @@ export interface PublicConfig {
     defaultShiftsPerDay: number;
     showSearchWhenMoreThan: number;
     statusLabels: Record<"running" | "stopped" | "aborted" | "shift_ended" | "unknown", string>;
-    map: { useOnlineTiles: boolean; tileStyleUrl: string; tileOpacity: number };
+    map: { useOnlineTiles: boolean; tileStyleUrl: string };
     features: { globe: boolean; factoryFloor3d: boolean; excelUpload: boolean; manualStatusEdit: boolean; history: boolean };
     legal: { privacyPolicy: string; terms: string };
   };

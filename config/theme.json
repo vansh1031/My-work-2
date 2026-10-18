@@ -37,15 +37,15 @@
   },
   "panelOpacity": 0.9,
   "background": {
-    "dimOpacity": 0.55,
-    "dimOpacityWhileMoving": 0.3,
-    "blurPx": 1.5
+    "dimOpacity": 0.35,
+    "dimOpacityWhileMoving": 0.12,
+    "blurPx": 1
   },
   "globe": {
-    "ocean": "#0a1622",
-    "land": "#1c2a38",
-    "countryBorder": "#3d5266",
-    "stateBorder": "#2b3d4f",
+    "ocean": "#0f2236",
+    "land": "#2a3f56",
+    "countryBorder": "#56718c",
+    "stateBorder": "#3a5068",
     "highlightFill": "#2f81f7",
     "highlightFillOpacity": 0.28,
     "highlightBorder": "#58a6ff",

@@ -29,7 +29,14 @@ export class GlobeDirector {
     private anim: Anim,
     private reduceMotion: boolean,
     private events: DirectorEvents,
+    /** Closest zoom for a city. The built-in globe has no streets, so it stops nearer the state level. */
+    private cityZoom: number = anim.cityZoom,
   ) {}
+
+  /** Keeps the globe centred in the area to the right of (or above) the cards panel. */
+  applyPadding() {
+    this.map.setPadding(this.padding());
+  }
 
   destroy() {
     this.flightId++;
@@ -106,7 +113,7 @@ export class GlobeDirector {
     if (opts.instant || this.reduceMotion) {
       this.highlight(f);
       this.placeMarker(f);
-      this.map.jumpTo({ center: city, zoom: a.cityZoom, padding });
+      this.map.jumpTo({ center: city, zoom: this.cityZoom, padding });
       this.events.onStage({ flight: "instant", factory: f.name });
       return;
     }
@@ -127,7 +134,7 @@ export class GlobeDirector {
           if (t < 1) requestAnimationFrame(step);
         };
         requestAnimationFrame(step);
-        await this.move(() => this.map.easeTo({ center: city, zoom: a.cityZoom, duration: a.slideDurationMs, padding, easing: easeInOut, essential: true }), id);
+        await this.move(() => this.map.easeTo({ center: city, zoom: this.cityZoom, duration: a.slideDurationMs, padding, easing: easeInOut, essential: true }), id);
         return;
       }
 
@@ -152,7 +159,7 @@ export class GlobeDirector {
 
       this.events.onStage({ flight: kind, stage: "city", factory: f.name });
       this.placeMarker(f);
-      await this.move(() => this.map.easeTo({ center: city, zoom: a.cityZoom, duration: a.stageDurationMs, padding, easing: easeInOut, essential: true }), id);
+      await this.move(() => this.map.easeTo({ center: city, zoom: this.cityZoom, duration: a.stageDurationMs, padding, easing: easeInOut, essential: true }), id);
     } finally {
       if (id === this.flightId) {
         this.events.onMoving(false);

@@ -4,7 +4,6 @@
 // (config/animation.json factoryFloor.switchSweepDegrees) before closing in.
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { Machine } from "@fa/shared";
 import { useConfig } from "../../config/ConfigProvider";
@@ -33,11 +32,13 @@ function shortestAngle(from: number, to: number) {
 }
 
 function overviewCamera(radius: number, az: number): CameraState {
-  return { az, polar: 0.95, radius: radius * 1.85, target: new THREE.Vector3(0, 0.4, 0) };
+  // On portrait screens the cards panel covers the lower part, so step back to fit the floor in the strip above it.
+  const portrait = window.innerWidth < window.innerHeight;
+  return { az, polar: 0.95, radius: radius * (portrait ? 2.6 : 1.85), target: new THREE.Vector3(0, 0.4, 0) };
 }
 
 function focusCamera(p: Placement): CameraState {
-  return { az: Math.atan2(p.x, p.z), polar: 1.12, radius: 6, target: new THREE.Vector3(p.x, 1.1, p.z) };
+  return { az: Math.atan2(p.x, p.z), polar: 1.1, radius: 10, target: new THREE.Vector3(p.x, 1.4, p.z) };
 }
 
 /** Shifts the picture so the subject sits in the part of the screen not covered by the cards panel. */
@@ -171,11 +172,6 @@ function MachineOnFloor({ machine, placement, focused, dimmed }: { machine: Mach
           colors={{ body: config.theme.factoryFloor.machineBody, accent: config.theme.factoryFloor.machineAccent }}
         />
       </group>
-      {!dimmed && (
-        <Html position={[0, 3.4, 0]} center style={{ pointerEvents: "none" }} zIndexRange={[1, 0]}>
-          <div style={{ color: "#fff", fontSize: 12, fontWeight: 600, textShadow: "0 1px 3px rgba(0,0,0,.9)", whiteSpace: "nowrap" }}>{machine.code}</div>
-        </Html>
-      )}
     </group>
   );
 }
@@ -215,7 +211,7 @@ export function FactoryFloor({ machines, selectedId }: Props) {
     <Canvas
       className="background-layer"
       data-testid="factory-floor"
-      shadows
+      shadows={{ type: THREE.PCFShadowMap }}
       dpr={[1, 1.75]}
       frameloop={reduceMotion ? "demand" : "always"}
       camera={{ fov: 40, near: 0.1, far: 400, position: [0, 20, 30] }}

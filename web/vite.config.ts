@@ -11,7 +11,7 @@ export default defineConfig({
   plugins: [react()],
   base: "./",
   define: {
-    __DEFAULT_API_BASE__: JSON.stringify(process.env.API_BASE_URL ?? appConfig.apiBaseUrl),
+    __DEFAULT_API_BASE__: JSON.stringify(process.env.API_BASE_URL || appConfig.apiBaseUrl),
     __ALLOW_SERVER_CHANGE__: JSON.stringify(appConfig.allowServerAddressChange),
     __APP_VERSION__: JSON.stringify(JSON.parse(readFileSync(path.resolve(__dirname, "package.json"), "utf8")).version),
   },

@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import type { StatusRecord } from "@fa/shared";
 import { formatShortDate } from "../lib/format";
 import { useStatusLabel } from "./StatusBadge";
@@ -14,8 +15,13 @@ export function StatusGrid({
 }) {
   const label = useStatusLabel();
   const byKey = new Map(records.map((r) => [`${r.machineId}:${r.shift}:${r.workDate}`, r]));
+  // Open scrolled to the newest day (on the right) when the grid is wider than the screen.
+  const wrap = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (wrap.current) wrap.current.scrollLeft = wrap.current.scrollWidth;
+  }, [days.length]);
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" ref={wrap}>
       <table className="hgrid">
         <thead>
           <tr>

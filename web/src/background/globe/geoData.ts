@@ -27,8 +27,8 @@ export function loadGeo() {
 }
 
 /** Lowercase, no accents, single spaces: "Nuevo León" and "nuevo leon" match. */
-export function normaliseName(s: string): string {
-  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+export function normaliseName(s: string | null | undefined): string {
+  return (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 const COUNTRY_ALIASES: Record<string, string> = {
@@ -46,7 +46,7 @@ export function findCountry(geo: { countries: GeoCollection }, country: string) 
   const key = normaliseName(country);
   const target = COUNTRY_ALIASES[key] ?? key;
   return geo.countries.features.find(
-    (f) => normaliseName(f.properties.name) === target || f.properties.iso.toLowerCase() === key,
+    (f) => normaliseName(f.properties.name) === target || (f.properties.iso ?? "").toLowerCase() === key,
   );
 }
 

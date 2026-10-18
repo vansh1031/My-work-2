@@ -34,11 +34,21 @@ export function overlayLayers(theme: PublicConfig["theme"]): LayerSpecification[
   ];
 }
 
+/** Soft glow around the globe at low zoom, fading out as the camera gets close. */
+function atmosphere(theme: PublicConfig["theme"]): StyleSpecification["sky"] {
+  return {
+    "sky-color": theme.palettes[theme.mode].background,
+    "horizon-color": theme.globe.highlightBorder,
+    "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 0.8, 4, 0.5, 7, 0],
+  };
+}
+
 export function builtInStyle(theme: PublicConfig["theme"], geo: { countries: GeoCollection; states: GeoCollection }): StyleSpecification {
   const g = theme.globe;
   return {
     version: 8,
     projection: { type: "globe" },
+    sky: atmosphere(theme),
     sources: {
       countries: { type: "geojson", data: geo.countries as never },
       states: { type: "geojson", data: geo.states as never },
@@ -65,6 +75,7 @@ export async function onlineStyle(url: string, theme: PublicConfig["theme"]): Pr
     return {
       ...style,
       projection: { type: "globe" },
+      sky: style.sky ?? atmosphere(theme),
       sources: { ...style.sources, ...overlaySources() },
       layers: [...style.layers, ...overlayLayers(theme)],
     };

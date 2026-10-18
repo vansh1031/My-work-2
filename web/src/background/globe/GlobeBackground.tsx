@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { Map as MapLibreMap, type ErrorEvent } from "maplibre-gl";
+import { Map as MapLibreMap, setWorkerUrl, type ErrorEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+// MapLibre does its heavy work in a background worker. The build copies that file next to the app and this tells
+// MapLibre where it is (its own guess does not survive bundling or the desktop app).
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import type { FactorySummary } from "@fa/shared";
 import { useConfig } from "../../config/ConfigProvider";
 import { useSceneState } from "../../state/SceneProvider";
 import { loadGeo } from "./geoData";
 import { GlobeDirector } from "./globeDirector";
 import { builtInStyle, onlineStyle } from "./globeStyle";
+
+setWorkerUrl(new URL(workerUrl, window.location.href).href);
 
 interface Props {
   factories: FactorySummary[];
@@ -52,10 +57,13 @@ export function GlobeBackground({ factories, selectedId, onFail }: Props) {
         map.on("error", (e: ErrorEvent) => console.warn("GLOBE-003: map warning", e.error?.message ?? e));
         map.once("load", () => {
           if (cancelled || !map) return;
-          director.current = new GlobeDirector(map, geo, config.animation.globe, reduceMotion, {
+          const g = config.animation.globe;
+          const cityZoom = styleSource === "online" ? g.cityZoom : Math.min(g.cityZoom, g.stateZoom + 1.3);
+          director.current = new GlobeDirector(map, geo, g, reduceMotion, {
             onMoving: setMoving,
             onStage: (info) => setDebugInfo({ globe: { ...info, style: styleSource } }),
-          });
+          }, cityZoom);
+          director.current.applyPadding();
           setDebugInfo({ globe: { stage: "loaded", style: styleSource } });
           setReady(true);
         });
@@ -90,5 +98,6 @@ export function GlobeBackground({ factories, selectedId, onFail }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, selectedId]);
 
-  return <div ref={container} className="background-layer" data-testid="globe" />;
+  // Inline position: MapLibre's own stylesheet sets position: relative on the map, which would collapse it to zero height.
+  return <div ref={container} data-testid="globe" style={{ position: "absolute", inset: 0 }} />;
 }

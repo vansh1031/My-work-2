@@ -135,7 +135,6 @@ export const appSchema = z.object({
   map: z.object({
     useOnlineTiles: z.boolean(),
     tileStyleUrl: z.string(),
-    tileOpacity: opacity,
   }),
   features: z.object({
     globe: z.boolean(),

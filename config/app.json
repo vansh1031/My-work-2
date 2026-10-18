@@ -14,8 +14,7 @@
   },
   "map": {
     "useOnlineTiles": true,
-    "tileStyleUrl": "https://tiles.openfreemap.org/styles/positron",
-    "tileOpacity": 0.85
+    "tileStyleUrl": "https://tiles.openfreemap.org/styles/positron"
   },
   "features": {
     "globe": true,

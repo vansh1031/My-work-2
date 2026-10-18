@@ -7,3 +7,4 @@ playwright-report/
 desktop/src-tauri/target/
 desktop/src-tauri/gen/
 *.log
+release/
