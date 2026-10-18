@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import type { ZodType } from "zod";
+import type { PublicConfig } from "@fa/shared";
 import {
   animationSchema,
   appSchema,
@@ -105,7 +106,7 @@ export function loadConfig(dir: string): AppConfig {
 }
 
 /** The part of the config the app is allowed to see before anyone signs in. */
-export function publicConfig(config: AppConfig) {
+export function publicConfig(config: AppConfig): PublicConfig {
   return {
     branding: config.branding,
     theme: config.theme,
