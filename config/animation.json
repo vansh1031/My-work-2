@@ -1,0 +1,26 @@
+{
+  "reduceMotion": false,
+  "followSystemReduceMotion": true,
+  "globe": {
+    "idleRotationDegreesPerSecond": 2,
+    "nearDistanceKm": 600,
+    "overviewZoom": 1.6,
+    "countryZoom": 3.4,
+    "stateZoom": 5.2,
+    "cityZoom": 8.5,
+    "longFlightDurationMs": 3200,
+    "stageDurationMs": 1200,
+    "slideDurationMs": 1500
+  },
+  "factoryFloor": {
+    "idleOrbitDegreesPerSecond": 4,
+    "focusDurationMs": 1400,
+    "switchDurationMs": 2400,
+    "switchSweepDegrees": 360,
+    "otherMachinesOpacityWhenFocused": 0.12
+  },
+  "cards": {
+    "enterDurationMs": 220,
+    "enterStaggerMs": 35
+  }
+}

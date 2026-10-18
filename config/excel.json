@@ -1,0 +1,21 @@
+{
+  "sheet": "",
+  "headerRow": 1,
+  "columns": {
+    "date": ["Date", "Work Date"],
+    "shift": ["Shift", "Shift No", "Shift Number"],
+    "machineCode": ["Machine ID", "Machine Code", "M/C No.", "Machine No"],
+    "status": ["Status", "Machine Status"],
+    "abortCount": ["Abort Count", "Aborts", "Times Aborted"],
+    "remarks": ["Remarks", "Notes", "Comment"]
+  },
+  "statusValues": {
+    "running": ["Running", "Run", "R"],
+    "stopped": ["Stopped", "Stop", "S"],
+    "aborted": ["Aborted", "Abort", "A"],
+    "shift_ended": ["Shift Ended", "Ended", "Off", "E"]
+  },
+  "dateFormats": ["YYYY-MM-DD", "DD-MM-YYYY", "DD/MM/YYYY"],
+  "maxFileSizeMb": 5,
+  "maxRows": 5000
+}

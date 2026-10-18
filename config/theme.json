@@ -1,0 +1,61 @@
+{
+  "mode": "dark",
+  "fontFamily": "\"Inter Variable\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+  "cornerRadiusPx": 6,
+  "palettes": {
+    "dark": {
+      "background": "#0d1117",
+      "surface": "#161b22",
+      "surfaceRaised": "#1f2630",
+      "border": "#30363d",
+      "text": "#e6edf3",
+      "textMuted": "#8b949e",
+      "accent": "#2f81f7",
+      "accentText": "#ffffff",
+      "danger": "#f85149",
+      "focus": "#58a6ff"
+    },
+    "light": {
+      "background": "#f3f5f8",
+      "surface": "#ffffff",
+      "surfaceRaised": "#f6f8fa",
+      "border": "#d0d7de",
+      "text": "#1f2328",
+      "textMuted": "#59636e",
+      "accent": "#0969da",
+      "accentText": "#ffffff",
+      "danger": "#cf222e",
+      "focus": "#0969da"
+    }
+  },
+  "statusColors": {
+    "running": "#2da44e",
+    "stopped": "#d4a72c",
+    "aborted": "#e5534b",
+    "shift_ended": "#8b949e",
+    "unknown": "#57606a"
+  },
+  "panelOpacity": 0.9,
+  "background": {
+    "dimOpacity": 0.55,
+    "dimOpacityWhileMoving": 0.3,
+    "blurPx": 1.5
+  },
+  "globe": {
+    "ocean": "#0a1622",
+    "land": "#1c2a38",
+    "countryBorder": "#3d5266",
+    "stateBorder": "#2b3d4f",
+    "highlightFill": "#2f81f7",
+    "highlightFillOpacity": 0.28,
+    "highlightBorder": "#58a6ff",
+    "marker": "#ffffff",
+    "markerRing": "#2f81f7"
+  },
+  "factoryFloor": {
+    "floor": "#1a222c",
+    "gridLine": "#2a3542",
+    "machineBody": "#9aa7b4",
+    "machineAccent": "#4a5866"
+  }
+}
