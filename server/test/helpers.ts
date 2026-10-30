@@ -9,7 +9,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { buildApp } from "../src/app.js";
 import type { AppContext } from "../src/core/context.js";
 import { BinaryResponse } from "../src/core/http.js";
-import { pgliteDb, PGLITE_PARSERS } from "../src/core/pglite-db.js";
+import { pgliteDb } from "../src/core/pglite-db.js";
 import { dispatch } from "../src/core/router.js";
 import { prepareDatabase } from "../src/core/setup.js";
 import type { FileStore } from "../src/core/services/files.js";
@@ -108,7 +108,7 @@ export async function setupClient(engine: Engine): Promise<TestClient> {
     };
   }
 
-  const pg = await PGlite.create({ parsers: PGLITE_PARSERS });
+  const pg = await PGlite.create();
   const db = pgliteDb(pg);
   await prepareDatabase(db, readMigrations(), opts);
   const ctx: AppContext = { ...baseContext(), db };

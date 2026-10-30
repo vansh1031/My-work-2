@@ -2,7 +2,8 @@
 // as CSS variables, sets the window title and favicon. If the server cannot be reached, shows ConnectionScreen.
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { PublicConfig } from "@fa/shared";
-import { api, apiUrl, ApiError } from "../lib/api";
+import { api, ApiError } from "../lib/api";
+import { fileUrl } from "../lib/fileUrl";
 import { ConnectionScreen } from "../components/ConnectionScreen";
 
 interface ConfigValue {
@@ -44,7 +45,7 @@ function applyTheme(config: PublicConfig) {
   root.setProperty("color-scheme", theme.mode);
   document.title = config.branding.appTitle;
   const icon = document.getElementById("favicon") as HTMLLinkElement | null;
-  if (icon) icon.href = apiUrl("/api/brand/favicon");
+  if (icon) fileUrl("/api/brand/favicon").then((url) => (icon.href = url), () => undefined);
 }
 
 function useSystemReducedMotion(): boolean {
@@ -57,6 +58,23 @@ function useSystemReducedMotion(): boolean {
     return () => mq.removeEventListener("change", on);
   }, []);
   return reduced;
+}
+
+/** Shown while the app starts. The first start in browser mode prepares the built-in database, which takes a few seconds. */
+function Starting() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 400);
+    return () => clearTimeout(t);
+  }, []);
+  if (!visible) return null;
+  return (
+    <div className="login-wrap" role="status">
+      <div className="row muted">
+        <div className="spinner" /> Starting
+      </div>
+    </div>
+  );
 }
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
@@ -78,7 +96,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   useEffect(load, [load]);
 
   if (error) return <ConnectionScreen error={error} onRetry={load} />;
-  if (!config) return null;
+  if (!config) return <Starting />;
 
   const reduceMotion = config.animation.reduceMotion || (config.animation.followSystemReduceMotion && systemReduced);
   return <ConfigContext.Provider value={{ config, reduceMotion }}>{children}</ConfigContext.Provider>;

@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:server-mode": "vite build --mode server --outDir dist-server",
+    "build:e2e": "vite build --mode browser --outDir dist-e2e",
     "preview": "vite preview",
+    "preview:e2e": "vite preview --outDir dist-e2e --port 4200 --strictPort",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -15,13 +18,16 @@
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
     "@tanstack/react-query": "^5.104.4",
+    "bcryptjs": "^3.0.3",
+    "exceljs": "^4.4.0",
     "framer-motion": "^14.3.0",
     "lucide-react": "^1.59.0",
     "maplibre-gl": "^6.15.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.4",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

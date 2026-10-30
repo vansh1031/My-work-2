@@ -94,7 +94,7 @@ test("supervisor uploads a sheet: errors block saving, a correct file is saved",
   await expect(page.getByRole("cell", { name: /^good\.xlsx/ })).toBeVisible();
 });
 
-test("supervisor edits a status by hand and the admin change log records it", async ({ page, browser }) => {
+test("supervisor edits a status by hand and the admin change log records it", async ({ page }) => {
   await signIn(page, "supervisor", "sample-pass-1");
   await page.getByTestId(/factory-card-/).filter({ hasText: "Indore Plant" }).click();
   await page.getByRole("button", { name: "View factory" }).click();
@@ -108,13 +108,14 @@ test("supervisor edits a status by hand and the admin change log records it", as
   await expect(page.getByRole("heading", { name: "Turning Lathe" })).toBeVisible();
   await expect(page.getByText("Belt replacement")).toBeVisible();
 
-  const adminPage = await (await browser.newContext()).newPage();
+  // A second tab: its own sign-in, the same data (in browser mode, the same browser database).
+  const adminPage = await page.context().newPage();
   await signInAdmin(adminPage);
   await adminPage.goto("/#/admin?tab=log");
   await expect(adminPage.getByRole("row", { name: /Sample Supervisor Edited machine status/ }).first()).toBeVisible();
 });
 
-test("admin creates a user, who must change password and sees only their factory", async ({ page, browser }) => {
+test("admin creates a user, who must change password and sees only their factory", async ({ page }) => {
   await signInAdmin(page);
   await page.goto("/#/admin");
   await page.getByRole("button", { name: "Add user" }).click();
@@ -125,7 +126,7 @@ test("admin creates a user, who must change password and sees only their factory
   await page.getByRole("button", { name: "Create user" }).click();
   await expect(page.getByRole("cell", { name: "Ravi Kumar" })).toBeVisible();
 
-  const ravi = await (await browser.newContext()).newPage();
+  const ravi = await page.context().newPage();
   await signIn(ravi, "ravi", "ravi-first-1");
   await expect(ravi.getByRole("heading", { name: "Change password" })).toBeVisible();
   await ravi.fill("#current", "ravi-first-1");
@@ -134,6 +135,23 @@ test("admin creates a user, who must change password and sees only their factory
   await ravi.click("button[type=submit]");
   await expect(ravi.locator("[data-testid^=factory-card-]")).toHaveCount(1);
   await expect(ravi.getByText("Pune Assembly")).toBeVisible();
+});
+
+test("admin uploads a factory photo and it shows on the card", async ({ page }) => {
+  // A real 2x2 PNG image.
+  const png = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==",
+    "base64",
+  );
+  await signInAdmin(page);
+  await page.goto("/#/admin?tab=factories");
+  await page.getByRole("button", { name: /Pune Assembly/ }).click();
+  await page.locator("input[type=file][accept^='image']").setInputFiles({ name: "pune.png", mimeType: "image/png", buffer: png });
+  await expect(page.getByText("Replace photo")).toBeVisible();
+  await page.goto("/#/");
+  const card = page.getByTestId(/factory-card-/).filter({ hasText: "Pune Assembly" });
+  await expect(card.getByRole("img", { name: "Photo of Pune Assembly" })).toBeVisible();
+  await expect.poll(() => card.locator("img").evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBe(2);
 });
 
 test("history shows the grid and totals", async ({ page }) => {

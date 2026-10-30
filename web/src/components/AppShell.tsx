@@ -3,13 +3,14 @@ import { Link, NavLink } from "react-router-dom";
 import { KeyRound, LogOut, UserRound } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { useConfig } from "../config/ConfigProvider";
-import { apiUrl } from "../lib/api";
+import { useFileUrl } from "../lib/fileUrl";
 
 export function Brand() {
   const { config } = useConfig();
+  const logo = useFileUrl("/api/brand/logo");
   return (
     <Link to="/" className="brand">
-      <img src={apiUrl("/api/brand/logo")} alt="" />
+      {logo ? <img src={logo} alt="" /> : <span style={{ width: "1.8rem" }} />}
       <span>{config.branding.appTitle}</span>
     </Link>
   );

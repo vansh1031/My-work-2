@@ -7,7 +7,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Machine } from "@fa/shared";
 import { useConfig } from "../../config/ConfigProvider";
-import { apiUrl } from "../../lib/api";
+import { useFileUrl } from "../../lib/fileUrl";
 import { useSceneState } from "../../state/SceneProvider";
 import { layoutMachines, type Placement } from "./layout";
 import { MachineModel } from "./MachineModels";
@@ -134,6 +134,7 @@ function MachineOnFloor({ machine, placement, focused, dimmed }: { machine: Mach
   const group = useRef<THREE.Group>(null);
   const spin = useRef<THREE.Group>(null);
   const status = machine.current?.status ?? "unknown";
+  const modelUrl = useFileUrl(machine.modelUrl);
   const statusColor = config.theme.statusColors[status];
   const targetOpacity = dimmed ? config.animation.factoryFloor.otherMachinesOpacityWhenFocused : 1;
 
@@ -168,7 +169,7 @@ function MachineOnFloor({ machine, placement, focused, dimmed }: { machine: Mach
       <group ref={spin}>
         <MachineModel
           type={machine.machineType}
-          modelUrl={machine.modelUrl ? apiUrl(machine.modelUrl) : null}
+          modelUrl={modelUrl}
           colors={{ body: config.theme.factoryFloor.machineBody, accent: config.theme.factoryFloor.machineAccent }}
         />
       </group>

@@ -2,7 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useConfig } from "../config/ConfigProvider";
-import { apiUrl } from "../lib/api";
+import { DATA_MODE } from "../lib/api";
+import { useFileUrl } from "../lib/fileUrl";
 import { defaultServerAddress, getServerAddress, setServerAddress } from "../lib/serverAddress";
 import { ErrorNotice, Notice } from "../components/Notice";
 import { PublicShell } from "../components/AppShell";
@@ -18,6 +19,7 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [showServer, setShowServer] = useState(false);
   const [server, setServer] = useState(getServerAddress() || defaultServerAddress());
+  const logo = useFileUrl("/api/brand/logo");
   useScene({ kind: "globe", factories: [], selectedId: null });
 
   if (user) {
@@ -42,7 +44,7 @@ export function LoginPage() {
     <PublicShell>
       <div className="login-wrap">
         <form className="login-card" onSubmit={submit} aria-label="Sign in">
-          <img className="logo" src={apiUrl("/api/brand/logo")} alt={config.branding.companyName} />
+          {logo ? <img className="logo" src={logo} alt={config.branding.companyName} /> : <div className="logo" />}
           <div className="stack" style={{ gap: "0.25rem" }}>
             <h1>{config.branding.loginHeading}</h1>
             {config.branding.loginSubheading && <p className="muted">{config.branding.loginSubheading}</p>}
@@ -61,7 +63,7 @@ export function LoginPage() {
             {busy ? "Signing in" : "Sign in"}
           </button>
           <p className="muted small">{config.branding.supportContact}</p>
-          {__ALLOW_SERVER_CHANGE__ && (
+          {__ALLOW_SERVER_CHANGE__ && DATA_MODE === "server" && (
             <div className="stack" style={{ gap: "0.4rem" }}>
               <button type="button" className="btn btn-ghost btn-sm" style={{ justifySelf: "start" }} onClick={() => setShowServer((s) => !s)}>
                 Connection settings

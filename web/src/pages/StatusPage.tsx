@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { useConfig } from "../config/ConfigProvider";
-import { api } from "../lib/api";
+import { api, DATA_MODE } from "../lib/api";
 import { getServerAddress } from "../lib/serverAddress";
 import { webglAvailable } from "../background/BackgroundLayer";
 import { AppShell, PublicShell } from "../components/AppShell";
@@ -56,9 +56,17 @@ export function StatusPage() {
               <thead><tr><th>Check</th><th>Result</th><th>Details</th></tr></thead>
               <tbody>
                 <Check ok={true} label="App version" detail={__APP_VERSION__} />
-                <Check ok={server !== null} label="Server" detail={server ? `Version ${server.version} at ${getServerAddress() || window.location.origin}` : String((error as Error | null)?.message ?? "")} />
+                {DATA_MODE === "server" ? (
+                  <Check ok={server !== null} label="Server" detail={server ? `Version ${server.version} at ${getServerAddress() || window.location.origin}` : String((error as Error | null)?.message ?? "")} />
+                ) : (
+                  <Check ok={server !== null} label="Backend" detail={server ? "Built into the app. All data is kept in this browser on this computer." : String((error as Error | null)?.message ?? "")} />
+                )}
                 <Check ok={server ? server.database === "ok" : null} label="Database" detail={server ? `${server.database}. Applied migrations: ${server.migrations.join(", ")}` : ""} />
-                <Check ok={server ? server.config === "ok" : null} label="Configuration files" detail="Checked by the server at startup. Run npm run check-config on the server for details." />
+                <Check
+                  ok={server ? server.config === "ok" : null}
+                  label="Configuration files"
+                  detail={DATA_MODE === "server" ? "Checked by the server at startup. Run npm run check-config on the server for details." : "Built into the app and checked at startup. Run npm run check-config before building."}
+                />
                 <Check ok={webglAvailable()} label="3D graphics (WebGL)" detail={webglAvailable() ? "Available. Globe and factory floor can be drawn." : "Not available on this computer. The app works, with a plain background."} />
                 <Check
                   ok={config.app.map.useOnlineTiles ? tiles : true}

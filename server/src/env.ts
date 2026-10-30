@@ -25,7 +25,7 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): Env {
     databaseUrl: source.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/factory_atlas",
     configDir: path.resolve(source.CONFIG_DIR ?? path.join(repoRoot, "config")),
     dataDir: path.resolve(source.DATA_DIR ?? path.join(repoRoot, "data")),
-    webDistDir: path.resolve(source.WEB_DIST_DIR ?? path.join(repoRoot, "web/dist")),
+    webDistDir: path.resolve(source.WEB_DIST_DIR ?? path.join(repoRoot, "web/dist-server")),
     corsOrigins: (source.CORS_ORIGINS ?? "*").split(",").map((s) => s.trim()).filter(Boolean),
     initialAdminPassword: source.INITIAL_ADMIN_PASSWORD ?? "change-me-now",
     logLevel: source.LOG_LEVEL ?? "info",

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ApiError } from "../lib/api";
+import { DATA_MODE } from "../lib/api";
 import { defaultServerAddress, getServerAddress, setServerAddress } from "../lib/serverAddress";
 import { ErrorNotice } from "./Notice";
 
@@ -9,9 +10,9 @@ export function ConnectionScreen({ error, onRetry }: { error: ApiError; onRetry(
   return (
     <div className="login-wrap">
       <div className="login-card">
-        <h1>Cannot connect</h1>
+        <h1>{DATA_MODE === "server" ? "Cannot connect" : "Cannot start"}</h1>
         <ErrorNotice error={error} />
-        {__ALLOW_SERVER_CHANGE__ && (
+        {__ALLOW_SERVER_CHANGE__ && DATA_MODE === "server" && (
           <div className="field">
             <label htmlFor="server">Server address</label>
             <input id="server" className="input" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="https://atlas.example.com" />
@@ -22,7 +23,7 @@ export function ConnectionScreen({ error, onRetry }: { error: ApiError; onRetry(
           <button
             className="btn btn-primary"
             onClick={() => {
-              if (__ALLOW_SERVER_CHANGE__) setServerAddress(address.trim() === defaultServerAddress() ? null : address.trim());
+              if (__ALLOW_SERVER_CHANGE__ && DATA_MODE === "server") setServerAddress(address.trim() === defaultServerAddress() ? null : address.trim());
               onRetry();
             }}
           >

@@ -1,6 +1,45 @@
-// The one place the app talks to the server. Every failure becomes an ApiError with the server's error code
-// (see docs/troubleshooting.md), or NET-001 when the server cannot be reached at all.
+// The one place the app talks to the backend. Every failure becomes an ApiError with the backend's error code
+// (see docs/troubleshooting.md), or NET-001 when a server cannot be reached at all.
+//
+// Where requests go depends on the data mode chosen when the app was built (config/app.json "dataMode"):
+//   "browser": to the backend built into the app (web/src/local-backend), which keeps data in this browser
+//   "server":  over the network to a Factory Atlas server
+// Screens never know the difference: they always call api.get / api.post and so on.
+import type { DispatchInput } from "../../../server/src/core/router";
+import type { LocalBackend } from "../local-backend";
 import { getServerAddress } from "./serverAddress";
+
+export const DATA_MODE: "browser" | "server" = __DATA_MODE__;
+
+let localBackend: Promise<LocalBackend> | null = null;
+
+function startLocal(): Promise<LocalBackend> {
+  localBackend ??= import("../local-backend").then((m) => m.startLocalBackend());
+  localBackend.catch(() => (localBackend = null));
+  return localBackend;
+}
+
+/** Browser mode: answers a request with the built-in backend, shaped like a server response. */
+async function localRequest(method: string, path: string, body: unknown, isForm: boolean): Promise<Response> {
+  let backend: LocalBackend;
+  try {
+    backend = await startLocal();
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    return Response.json({ error: { code: "LOCAL-001", message: `The built-in backend could not start in this browser. (${reason})` } }, { status: 503 });
+  }
+  const input: DispatchInput = { method, url: path, token, body: isForm ? undefined : body, file: null };
+  if (isForm) {
+    const file = (body as FormData).get("file");
+    if (file instanceof File) input.file = { fileName: file.name, mimeType: file.type, data: new Uint8Array(await file.arrayBuffer()) };
+  }
+  const out = await backend.call(input);
+  if (out.binary) {
+    const { data, contentType } = out.binary;
+    return new Response(new Blob([data as BlobPart], { type: contentType }), { status: out.status, headers: { "content-type": contentType } });
+  }
+  return Response.json(out.body, { status: out.status });
+}
 
 const TOKEN_KEY = "fa.session";
 let token: string | null = readToken();
@@ -44,7 +83,7 @@ export class ApiError extends Error {
   }
 }
 
-/** Full URL for a server path. Used for images and 3D models, which the browser loads by itself. */
+/** Full URL for a server path (server mode). For images and 3D models use useFileUrl() in lib/fileUrl.ts. */
 export function apiUrl(path: string): string {
   return `${getServerAddress()}${path}`;
 }
@@ -54,14 +93,18 @@ async function request<T>(method: string, path: string, body?: unknown, isForm =
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body !== undefined && !isForm) headers["Content-Type"] = "application/json";
   let res: Response;
-  try {
-    res = await fetch(apiUrl(path), {
-      method,
-      headers,
-      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
-    });
-  } catch {
-    throw new ApiError("NET-001", `Cannot reach the server at ${getServerAddress() || window.location.origin}. Check the network connection and the server address.`, 0);
+  if (DATA_MODE === "browser") {
+    res = await localRequest(method, path, body, isForm);
+  } else {
+    try {
+      res = await fetch(apiUrl(path), {
+        method,
+        headers,
+        body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
+      });
+    } catch {
+      throw new ApiError("NET-001", `Cannot reach the server at ${getServerAddress() || window.location.origin}. Check the network connection and the server address.`, 0);
+    }
   }
   const type = res.headers.get("content-type") ?? "";
   if (!res.ok) {
@@ -83,6 +126,7 @@ export const api = {
   put: <T>(path: string, body: unknown) => request<T>("PUT", path, body),
   patch: <T>(path: string, body: unknown) => request<T>("PATCH", path, body),
   del: <T>(path: string) => request<T>("DELETE", path),
+  blob: (path: string) => request<Blob>("GET", path),
   upload: <T>(path: string, file: File) => {
     const form = new FormData();
     form.append("file", file, file.name);

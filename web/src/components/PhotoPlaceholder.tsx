@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { apiUrl } from "../lib/api";
+import { useFileUrl } from "../lib/fileUrl";
 
 /** Factory photo, or a plain "Photo pending" drawing until the admin uploads a real one. */
 export function FactoryPhoto({ url, name, className = "card-thumb" }: { url: string | null; name: string; className?: string }) {
   const [failed, setFailed] = useState(false);
-  if (url && !failed) {
-    return <img className={className} src={apiUrl(url)} alt={`Photo of ${name}`} loading="lazy" onError={() => setFailed(true)} />;
+  const src = useFileUrl(url);
+  if (url && src && !failed) {
+    return <img className={className} src={src} alt={`Photo of ${name}`} loading="lazy" onError={() => setFailed(true)} />;
   }
   return (
     <svg className={className} viewBox="0 0 120 90" role="img" aria-label="Photo pending">
