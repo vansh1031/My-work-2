@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
-import { useScene } from "../state/SceneProvider";
 
 export function NotFoundPage() {
-  useScene({ kind: "none" });
   return (
     <div className="login-wrap">
       <div className="login-card">

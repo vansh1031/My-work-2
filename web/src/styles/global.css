@@ -12,14 +12,12 @@
   --danger: #f85149;
   --focus: #58a6ff;
   --radius: 6px;
-  --panel-opacity: 0.9;
   --font: "Inter Variable", system-ui, sans-serif;
   --status-running: #2da44e;
   --status-stopped: #d4a72c;
   --status-aborted: #e5534b;
   --status-shift_ended: #8b949e;
   --status-unknown: #57606a;
-  --panel-width: clamp(320px, 31vw, 34rem);
   --gap: 0.75rem;
   color-scheme: dark;
 }
@@ -84,23 +82,18 @@ p { margin: 0; }
 
 /* ---------- App shell ---------- */
 .shell {
-  position: relative;
   height: 100dvh;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  z-index: 1;
-  pointer-events: none;
 }
-.shell > * { pointer-events: auto; }
 
 .topbar {
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 0.6rem 1rem;
-  background: color-mix(in srgb, var(--surface) calc(var(--panel-opacity) * 100%), transparent);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(8px);
 }
 .brand {
   display: flex;
@@ -122,10 +115,8 @@ p { margin: 0; }
 
 .content {
   min-height: 0;
-  position: relative;
-  pointer-events: none;
+  overflow: auto;
 }
-.content > * { pointer-events: auto; }
 
 .footer {
   display: flex;
@@ -134,25 +125,65 @@ p { margin: 0; }
   padding: 0.3rem 1rem;
   font-size: 0.75rem;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
 }
 .footer a { color: var(--text-muted); }
 
-/* ---------- Side panel (cards sit here, background stays visible to the right) ---------- */
-.side-panel {
-  position: absolute;
-  inset: var(--gap) auto var(--gap) var(--gap);
-  width: var(--panel-width);
+/* ---------- Page layout ---------- */
+/* Every screen: a header (breadcrumb, title, summary numbers, tabs), then its content. Nothing floats over anything. */
+.page {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  background: color-mix(in srgb, var(--surface) calc(var(--panel-opacity) * 100%), transparent);
+  gap: var(--gap);
+  padding: var(--gap);
+  min-height: 0;
+}
+.page-header { display: grid; gap: 0.5rem; }
+.breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--text-muted); }
+.breadcrumb a { color: var(--text-muted); }
+.breadcrumb a:hover { color: var(--text); }
+.breadcrumb [aria-current="page"] { color: var(--text); }
+.title-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.title-row h1 { display: flex; align-items: center; gap: 0.6rem; }
+
+/* Summary numbers: real counts from the data, one tile per status. */
+.summary { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.stat {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 7.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  backdrop-filter: blur(10px);
+}
+.stat-label { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; }
+.stat-value { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Two columns that fill the rest of the screen and scroll on their own. */
+.split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.6fr);
+  gap: var(--gap);
+}
+.split-even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.column { min-height: 0; display: flex; flex-direction: column; gap: var(--gap); }
+
+.panel {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   overflow: hidden;
 }
 .panel-header {
-  padding: 1rem 1rem 0.75rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border);
   display: grid;
   gap: 0.6rem;
@@ -165,27 +196,56 @@ p { margin: 0; }
   align-content: start;
   gap: 0.6rem;
 }
+.panel-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 600; }
 
-/* Wide pages (admin, history, upload) use a larger panel that still leaves an edge of background visible. */
+/* Globe and 3D floor panels. */
+.view-panel { position: relative; flex: 1; min-height: 320px; background: var(--bg); }
+.view-panel .map-canvas { position: absolute; inset: 0; }
+.view-message { position: absolute; inset: 0; display: grid; place-items: center; padding: 1rem; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
+.view-hint {
+  position: absolute; left: 0.75rem; top: 0.75rem; z-index: 2;
+  font-size: 0.75rem; color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px);
+  padding: 0.2rem 0.5rem;
+  pointer-events: none;
+}
+/* The selected factory, shown at the bottom of the globe panel. */
+.map-card {
+  position: absolute; left: 0.75rem; right: 0.75rem; bottom: 0.75rem; z-index: 2;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 0.75rem; align-items: center;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.map-card .card-thumb { width: 5rem; }
+
+/* Wide pages (admin, history, uploads, status) */
 .page-panel {
-  position: absolute;
-  inset: var(--gap);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   max-width: 1400px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
 }
 .page-panel .panel-body { padding: 1rem; gap: 1rem; }
 
-/* Tablet portrait and phones: panel moves to the bottom, background shows above it. */
-@media (max-width: 860px) {
-  :root { --panel-width: auto; }
-  .side-panel { inset: 32vh var(--gap) var(--gap) var(--gap); }
+/* Narrow screens (tablet portrait, phones): one column, the globe or floor first with a fixed height. */
+@media (max-width: 900px) {
+  .split, .split-even { grid-template-columns: 1fr; flex: none; }
+  /* The globe (home) or the 3D floor with machine details (factory page) comes first, the list below it. */
+  .split > .view-panel, .split > .column { order: -1; }
+  .view-panel { min-height: 0; height: 40vh; flex: none; }
   .topnav { display: none; }
+  .content { overflow: auto; }
 }
 
 /* ---------- Controls ---------- */
@@ -337,6 +397,42 @@ textarea.input { resize: vertical; min-height: 5rem; }
   box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent);
 }
 
+/* Factory list rows: the row shows the factory on the globe, the Open button opens it. */
+.list-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.55rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+.list-row[aria-current="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface-raised)); }
+.list-row .row-main { all: unset; cursor: pointer; display: grid; gap: 0.15rem; min-width: 0; }
+.list-row .row-main:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 2px; }
+.list-row .card-thumb { width: 4.5rem; }
+
+/* Machine tiles: a coloured edge and the status word, so status reads at a glance and never by colour alone. */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.6rem; align-content: start; }
+.tile {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.7rem 0.8rem 0.7rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--tile-status, var(--status-unknown));
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+}
+.tile:hover { border-color: var(--text-muted); border-left-color: var(--tile-status, var(--status-unknown)); }
+.tile:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tile[aria-current="true"] { border-color: var(--accent); border-left-color: var(--tile-status, var(--status-unknown)); background: color-mix(in srgb, var(--accent) 10%, var(--surface-raised)); }
+.tile-name { font-weight: 600; }
+.tile-sub { font-size: 0.8rem; color: var(--text-muted); }
+
 /* ---------- Tables ---------- */
 .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); }
 table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
@@ -401,29 +497,15 @@ tr:last-child td { border-bottom: none; }
 .login-card {
   width: min(400px, 100%);
   padding: 1.75rem;
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   display: grid;
   gap: 1rem;
-  backdrop-filter: blur(10px);
 }
 .login-card .logo { height: 3rem; width: auto; justify-self: start; }
 
-/* ---------- Background layer ---------- */
-.background {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-.background-layer { position: absolute; inset: 0; }
-.background-dim {
-  position: absolute;
-  inset: 0;
-  background: var(--bg);
-  transition: opacity 700ms ease;
-}
+/* ---------- Globe pin ---------- */
 .globe-marker {
   position: relative;
   width: 14px;
@@ -452,7 +534,6 @@ tr:last-child td { border-bottom: none; }
 @media (prefers-reduced-motion: reduce) {
   .globe-marker .ring { animation: none; }
 }
-.reduce-motion .globe-marker .ring { animation: none; }
 
 /* ---------- Debug panel ---------- */
 .debug {
@@ -473,3 +554,6 @@ tr:last-child td { border-bottom: none; }
 .markdown h1 { margin-bottom: 0.75rem; }
 .markdown h2 { margin: 1.2rem 0 0.4rem; }
 .markdown p { margin: 0.4rem 0; color: var(--text); max-width: 70ch; }
+
+/* Tabs under a page header (not inside a panel). */
+.tabs-page { margin: 0; padding: 0; }

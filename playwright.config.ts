@@ -50,6 +50,8 @@ export default defineConfig({
         INITIAL_ADMIN_PASSWORD: FIRST_ADMIN_PASSWORD,
         DATA_DIR: "test-results/e2e-data",
         LOG_LEVEL: "warn",
+        // The tests sign in many times a minute; real installations keep the default of 10.
+        LOGIN_RATE_LIMIT_PER_MINUTE: "200",
       },
     },
   ],

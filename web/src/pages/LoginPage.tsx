@@ -7,7 +7,6 @@ import { useFileUrl } from "../lib/fileUrl";
 import { defaultServerAddress, getServerAddress, setServerAddress } from "../lib/serverAddress";
 import { ErrorNotice, Notice } from "../components/Notice";
 import { PublicShell } from "../components/AppShell";
-import { useScene } from "../state/SceneProvider";
 
 export function LoginPage() {
   const { config } = useConfig();
@@ -20,7 +19,6 @@ export function LoginPage() {
   const [showServer, setShowServer] = useState(false);
   const [server, setServer] = useState(getServerAddress() || defaultServerAddress());
   const logo = useFileUrl("/api/brand/logo");
-  useScene({ kind: "globe", factories: [], selectedId: null });
 
   if (user) {
     const from = (location.state as { from?: string } | null)?.from;

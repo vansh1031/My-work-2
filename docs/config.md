@@ -41,14 +41,11 @@ Add the words to `excel.json` -> `statusValues.running` and `statusValues.stoppe
 ### A factory works 3 shifts
 Not a config change: Admin, Factories and machines, Edit details, Shifts per day = 3.
 
-### The globe is too bright, or too faint
-`theme.json` -> `background.dimOpacity` (0 = no dimming, 1 = invisible). `dimOpacityWhileMoving` is used while the camera moves.
-
 ### Animations make a computer slow
-`animation.json` -> `"reduceMotion": true`. Or turn off one background: `app.json` -> `features.globe` or `features.factoryFloor3d` = `false`.
+`animation.json` -> `"reduceMotion": true`. Or turn off one 3D view: `app.json` -> `features.globe` or `features.factoryFloor3d` = `false`. The pages then show only the list or the tiles.
 
 ### Something is wrong and you want to see what the app is doing
-`app.json` -> `"debug": true`. A small panel appears in the corner of the app with the server address, user, current screen, background state, frames per second and recent errors.
+`app.json` -> `"debug": true`. A small panel appears in the corner of the app with the server address, user, current screen, what the globe and 3D floor are doing, frames per second and recent errors.
 
 ---
 
@@ -65,9 +62,9 @@ Not a config change: Admin, Factories and machines, Edit details, Shifts per day
 | `showSearchWhenMoreThan` | `5` | Show search and filters only when there are more factories (or machines) than this. |
 | `statusLabels` | Running, Stopped, Aborted, Shift ended, No data | The words shown next to each status dot. |
 | `map.useOnlineTiles` | `true` | Use the online map (streets, city names) when reachable. If it cannot be reached, the built-in globe is used. |
-| `map.tileStyleUrl` | OpenFreeMap positron | Address of the online map style. Must be a MapLibre style. |
-| `features.globe` | `true` | Globe behind the factories list. |
-| `features.factoryFloor3d` | `true` | 3D floor behind the machines. |
+| `map.tileStyleUrl` | OpenFreeMap liberty | Address of the online map style. Must be a MapLibre style. |
+| `features.globe` | `true` | Globe panel next to the factory list. |
+| `features.factoryFloor3d` | `true` | 3D floor panel next to the machine tiles. |
 | `features.excelUpload` | `true` | Excel upload for allowed users. |
 | `features.manualStatusEdit` | `true` | "Update status" for allowed users. |
 | `features.history` | `true` | History tab. |
@@ -95,10 +92,6 @@ Not a config change: Admin, Factories and machines, Edit details, Shifts per day
 | `cornerRadiusPx` | Corner rounding of buttons, cards and panels (0 to 16). Keep it small: no pill shapes. |
 | `palettes.dark`, `palettes.light` | `background`, `surface` (panels), `surfaceRaised` (cards), `border`, `text`, `textMuted`, `accent` (buttons, selection), `accentText`, `danger`, `focus`. |
 | `statusColors` | Colour for `running`, `stopped`, `aborted`, `shift_ended`, `unknown`. |
-| `panelOpacity` | How solid the side panel is (0 to 1). |
-| `background.dimOpacity` | How much the globe and floor are darkened (0 to 1). |
-| `background.dimOpacityWhileMoving` | Darkening while the camera moves (lower = brighter). |
-| `background.blurPx` | Slight blur of the background, in pixels (0 = sharp). |
 | `globe.*` | `ocean`, `land`, `countryBorder`, `stateBorder`, `highlightFill`, `highlightFillOpacity`, `highlightBorder`, `marker`, `markerRing`. The land and border colours apply to the built-in globe only. |
 | `factoryFloor.*` | `floor`, `gridLine`, `machineBody`, `machineAccent` (placeholder machine colours). |
 
@@ -124,7 +117,6 @@ All colours are written like `#1a2b3c`.
 | `factoryFloor.switchDurationMs` | `2400` | Time to move from one machine to another. |
 | `factoryFloor.switchSweepDegrees` | `360` | Extra turn around the floor when switching machines. 0 = direct. |
 | `factoryFloor.otherMachinesOpacityWhenFocused` | `0.12` | How visible the other machines stay. |
-| `cards.enterDurationMs`, `cards.enterStaggerMs` | `220`, `35` | Card appear animation. |
 
 ## excel.json
 
@@ -172,6 +164,7 @@ Server mode only. Set in `.env` or the shell. These are per installation, or sec
 | `WEB_DIST_DIR` | `<project>/web/dist-server` | The built web app (server mode build) the server also serves. |
 | `CORS_ORIGINS` | `*` | Comma-separated addresses allowed to call the server. |
 | `LOG_LEVEL` | `info` | `error`, `warn`, `info` or `debug`. |
+| `LOGIN_RATE_LIMIT_PER_MINUTE` | `10` | Sign-in attempts allowed per minute from one address. Protects against password guessing; only raise it for automated tests. |
 
 ## Build settings (browser mode)
 

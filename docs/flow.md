@@ -90,47 +90,44 @@ LoginPage.submit()                     web/src/pages/LoginPage.tsx
 
 ```
 HomePage                               web/src/pages/HomePage.tsx
-  useFactories() -> GET /api/factories          lib/queries.ts -> routes/factories.ts -> services/factories.ts listFactories()
+  useFactories() -> GET /api/factories          lib/queries.ts -> core/routes/factories.ts -> core/services/factories.ts listFactories()
+  Summary(addCounts(...))                       components/Summary.tsx   totals across the user's factories
   selectedId from the address (?f=3)
-  useScene({ kind: "globe", factories, selectedId })   tells the background what to draw
-
-BackgroundLayer sees scene.kind "globe" -> lazy loads GlobeBackground
-GlobeBackground                        web/src/background/globe/GlobeBackground.tsx
-  loadGeo()                            geoData.ts   fetch geo/countries.json, geo/states.json (once)
-  builtInStyle() or onlineStyle()      globeStyle.ts
-  new MapLibreMap(...) -> on "load" -> new GlobeDirector(...)    globeDirector.ts
-  when selectedId changes:
-    director.showFactory(factory)      or director.clearSelection()
+  FactoryRow: row click -> select(id)   Open button -> /factories/3
+  ViewPanel("Globe")                            components/ViewPanel.tsx  WebGL check, lazy load, BG-001 message on failure
+    GlobeView(factories, selectedId, onPick)    web/src/views/globe/GlobeView.tsx
+      loadCountries()  and  onlineStyle()       fetched at the same time (geoData.ts, globeStyle.ts)
+      new MapLibreMap(online style, or builtInStyle(countries) if offline)
+      on "load" -> new GlobeDirector(...)       globeDirector.ts
+      when selectedId changes: director.showFactory(factory) or director.clearSelection()
+      a pin is clicked -> onPick(id) -> select(id)
+    map-card (selected factory)                 "Open factory" -> /factories/3
 
 GlobeDirector.showFactory(f)
   planFlight(previous, f, nearDistanceKm)       shared/src/geo.ts -> "first" | "slide" | "long"
+  areas(f): findCountry() -> loadStates(iso)    only that country's states, geo/states/<ISO>.json
   reduce motion -> jumpTo city, highlight, pin
-  slide -> highlight(f), animate pin and easeTo city together
-  first/long:
-    findCountry() -> flyTo country box          (zooms out and rotates for long trips)
-    findState()   -> highlight state, easeTo state box
-    placeMarker() -> easeTo city
-  onMoving(true/false) -> SceneProvider.moving -> BackgroundLayer brightens the background while moving
-
-Click "View factory" -> navigate to /factories/3
+  slide -> highlight state, animate pin and easeTo city together
+  first/long: flyTo country box -> highlight state, easeTo state box -> placeMarker(), easeTo city
+  user drags or zooms -> flight stops, idle rotation pauses 30 seconds; tab hidden -> rotation stops
 ```
 
-## 6. Factory page and the 3D floor
+## 6. Factory page, the 3D floor and machine details
 
 ```
-FactoryPage                            web/src/pages/FactoryPage.tsx
+FactoryPage                            web/src/pages/FactoryPage.tsx   routes /factories/:id and /factories/:id/machines/:mid
   useFactory(id) -> GET /api/factories/:id      listFactories + listMachines (current status per machine)
-  selectedId from ?m=12
-  useScene({ kind: "floor", factoryId, machines, selectedId })
-
-BackgroundLayer -> lazy loads FactoryFloor     web/src/background/floor/FactoryFloor.tsx
-  layoutMachines(machines)             layout.ts   fixed spiral positions
-  MachineOnFloor x N                   status ring colour, MachineModel (MachineModels.tsx: placeholder or .glb)
-  CameraRig                            on selectedId change: tween to focusCamera() or overviewCamera()
-                                       switching machines adds switchSweepDegrees around the floor
-  usePanelOffset()                     shifts the picture so the subject sits beside the cards panel
-
-Click "Open machine" -> /factories/3/machines/12 -> MachinePage keeps the floor focused on that machine
+  FactoryHeader                                 components/FactoryHeader.tsx: breadcrumb, Summary, tabs
+  selectedId from the address (:mid)
+  MachineTile click -> select(mid) -> navigate to /factories/:id/machines/:mid (click again closes)
+  ViewPanel("Factory floor")
+    FactoryFloor(machines, selectedId, onPick)  web/src/views/floor/FactoryFloor.tsx
+      layoutMachines(machines)                  layout.ts   fixed spiral positions
+      MachineOnFloor x N                        status ring colour, MachineModel; click -> onPick(mid)
+      CameraRig                                 tween to focusCamera() or overviewCamera(panel shape); switching adds switchSweepDegrees
+  MachineDetails(machineId, ...)                components/MachineDetails.tsx, under the 3D view
+    useMachine(mid) -> GET /api/machines/:mid   details, shifts, last 14 days
+    Previous / Next -> select(other mid); close -> /factories/:id
 ```
 
 ## 7. Excel upload
@@ -166,7 +163,7 @@ UploadPage.confirm()
 ## 8. Manual status edit
 
 ```
-MachinePage -> EditStatus.submit()     web/src/pages/MachinePage.tsx
+MachineDetails -> EditStatus.submit()  web/src/components/MachineDetails.tsx
   useManualStatus(id).mutate()         lib/queries.ts
     PUT /api/machines/:id/status       server/src/core/routes/factories.ts
       feature on, requireStatusPermission, assertFactoryAccess, shift <= shiftsPerDay, no future date

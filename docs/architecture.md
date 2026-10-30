@@ -37,9 +37,8 @@ Screens never know which mode they run in: they always call `api.get`, `api.post
 | Desktop shell | Tauri 2 | `desktop/src-tauri` |
 | Screens | React 19 + TypeScript, built with Vite | `web/src` |
 | Data loading | TanStack Query | `web/src/lib/queries.ts` |
-| Globe | MapLibre GL 6 (globe projection) | `web/src/background/globe` |
-| 3D factory floor | three.js through React Three Fiber | `web/src/background/floor` |
-| Card animations | Framer Motion | pages and `BackgroundLayer.tsx` |
+| Globe | MapLibre GL 6 (globe projection), in its own panel | `web/src/views/globe` |
+| 3D factory floor | three.js through React Three Fiber, in its own panel | `web/src/views/floor` |
 | Icons | Lucide (SVG icons) | everywhere |
 | Backend routes and logic | TypeScript, no framework, runs in Node or a browser | `server/src/core` |
 | Browser database | PGlite 0.5 (PostgreSQL 17 in WebAssembly) + our IndexedDB storage | `web/src/local-backend` |
@@ -62,7 +61,7 @@ factory-atlas/
   config/                   EVERYTHING A CLIENT CHANGES. Explained in docs/config.md
     app.json                Data mode, server address, features on/off, idle sign-out, status words, map
     branding.json           Company name, app title, login text, logo and favicon file names
-    theme.json              Colours, font, corner radius, background dimming, globe and floor colours
+    theme.json              Colours, font, corner radius, globe and floor colours
     animation.json          Globe and floor camera speeds, zoom levels, near/far distance
     excel.json              Excel column names, status words, date formats, limits
     assets/                 logo.svg, favicon.svg
@@ -108,7 +107,8 @@ factory-atlas/
                             the API suite (api-suite.ts) run on PostgreSQL and on PGlite
   web/
     index.html, vite.config.ts   Build settings: data mode, first admin password, sample data
-    public/geo/             Country and state outlines (built by scripts/build-geo.mjs)
+    public/geo/             Country outlines, and state outlines per country in geo/states/<ISO>.json
+                            (built by scripts/build-geo.mjs)
     src/main.tsx            Entry point
     src/App.tsx             Screens and who may open them
     src/local-backend/      BROWSER MODE BACKEND
@@ -121,11 +121,14 @@ factory-atlas/
       protocol.ts           Messages between page and worker
     src/config/ConfigProvider.tsx   Loads config, applies theme, shows "Starting"
     src/auth/AuthProvider.tsx       Signed-in user, idle sign-out
-    src/state/SceneProvider.tsx     What the background should show
-    src/background/         BackgroundLayer, globe/, floor/
+    src/views/              The 3D views, each shown in its own panel through components/ViewPanel.tsx
+      globe/                GlobeView (map), globeDirector (camera moves), globeStyle, geoData (outlines)
+      floor/                FactoryFloor (scene and camera), MachineModels (placeholders, .glb), layout
+      webgl.ts              Checks whether this computer can draw 3D
     src/pages/              One file per screen; admin/ has the three admin tabs
-    src/components/         Shared pieces: StatusBadge, Notice, Modal, AppShell, DebugPanel ...
-    src/lib/                api.ts (all backend calls), fileUrl.ts (images and models), queries.ts,
+    src/components/         Shared pieces: FactoryHeader (breadcrumb, numbers, tabs), Summary, MachineDetails,
+                            ViewPanel, StatusBadge, Notice, Modal, AppShell, DebugPanel ...
+    src/lib/                api.ts (all backend calls), fileUrl.ts (images and models), queries.ts, debug.ts,
                             serverAddress.ts, format.ts
     src/styles/global.css   All styling, driven by theme variables
     dist/                   Build output (browser mode by default): website and desktop app

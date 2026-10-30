@@ -18,9 +18,5 @@
     "switchDurationMs": 2400,
     "switchSweepDegrees": 360,
     "otherMachinesOpacityWhenFocused": 0.12
-  },
-  "cards": {
-    "enterDurationMs": 220,
-    "enterStaggerMs": 35
   }
 }

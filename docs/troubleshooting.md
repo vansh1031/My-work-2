@@ -18,13 +18,13 @@ Find the problem without opening the code. Start with section 1, then look up an
 | "Cannot connect" screen when the app starts (`NET-001`) | Server mode: server not running, or the app points to the wrong address | Start the server. Check the address under "Connection settings" on the login screen, or `apiBaseUrl` in `config/app.json` before building the desktop app. |
 | `CONFIG-001` ("Cannot start" in browser mode, or the server stops) | A config file has a mistake | The message lists each file, field and problem. Fix, then rebuild (browser mode) or restart (server mode). `npm run check-config` checks without starting. |
 | Server stops with `DB-001` | Server mode: database not reachable | Is PostgreSQL running? Check `DATABASE_URL` in `.env`. |
-| Globe area is plain dark, no globe | WebGL not available, or `features.globe` is off | System status, "3D graphics (WebGL)". Update the graphics driver, or keep it off; the app works without it. |
+| Globe panel shows a message instead of the globe | WebGL not available, or `features.globe` is off | System status, "3D graphics (WebGL)". Update the graphics driver, or keep it off; the app works without it. |
 | Globe shows but no streets or city names | Online map not reachable, built-in globe in use (this is normal offline) | System status, "Online map tiles". Check internet access or `map.tileStyleUrl`. |
 | Globe does not highlight the state | State or country name does not match the boundary data | Use the usual English name: "Madhya Pradesh", "India", "Baden-Württemberg". The debug panel shows `stateFound: false`. |
 | Pin is in the wrong place | Latitude and longitude swapped or wrong | Admin, Factories and machines, Edit details. Latitude is north-south (India about 8 to 37), longitude east-west (India about 68 to 97). |
-| 3D floor is empty or plain | WebGL not available, or `features.factoryFloor3d` off, or the factory has no machines | System status, then Admin. |
+| 3D floor panel shows a message, or is empty | WebGL not available, or `features.factoryFloor3d` off, or the factory has no machines | System status, then Admin. |
 | Uploaded 3D model does not appear | The file is not a valid .glb, or failed to load | The placeholder shape is shown instead. Export again as glTF binary (.glb). |
-| Animations are slow or jerky | Weak graphics on this computer | `animation.json` `"reduceMotion": true`, or lower `theme.json` `background.blurPx` to 0. |
+| Animations are slow or jerky | Weak graphics on this computer | `animation.json` `"reduceMotion": true`, or switch off one 3D view (`features.globe`, `features.factoryFloor3d`). |
 | User says they cannot see a factory | Not assigned (`PERM-002`) | Admin, Users, edit the user, tick the factory. |
 | User cannot see "Upload" or "Update status" | Switch is off for them (`PERM-003`) or the feature is off (`FEATURE-001`) | Admin, Users, tick "Can upload daily sheets and edit machine status". Check `features` in `app.json`. |
 | User is signed out often | `sessionIdleMinutes` is short, or they close the app (closing always signs out) | Raise `sessionIdleMinutes` in `app.json`. |
@@ -91,7 +91,7 @@ Find the problem without opening the code. Start with section 1, then look up an
 | LOCAL-003 | Browser mode: one way of starting the backend failed, the next is tried (warning only) | Nothing, unless LOCAL-001 follows. |
 | HTTP-nnn | Server answered without an error code | Usually a proxy or wrong address in between. Check the address. |
 | APP-001 | Unexpected error in the app | Note what you did; check the debug panel's recent errors. |
-| BG-001 | Background (globe or floor) could not be drawn | The app continues with a plain background. See WebGL above. |
+| BG-001 | The globe or 3D floor could not be drawn | The panel shows a message; everything else works. See WebGL above. |
 | GLOBE-001 | Boundary files missing from the app | Rebuild the app; `web/public/geo` must contain `countries.json` and `states.json`. |
 | GLOBE-002 | Online map style not reachable | Built-in globe is used instead. Normal without internet. |
 | GLOBE-003 | Map warning (for example a tile failed to load) | Usually harmless; repeated warnings mean a network problem. |

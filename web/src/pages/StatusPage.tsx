@@ -4,10 +4,9 @@ import { useAuth } from "../auth/AuthProvider";
 import { useConfig } from "../config/ConfigProvider";
 import { api, DATA_MODE } from "../lib/api";
 import { getServerAddress } from "../lib/serverAddress";
-import { webglAvailable } from "../background/BackgroundLayer";
+import { webglAvailable } from "../views/webgl";
 import { AppShell, PublicShell } from "../components/AppShell";
 import { ErrorNotice } from "../components/Notice";
-import { useScene } from "../state/SceneProvider";
 
 interface ServerStatus {
   version: string;
@@ -35,7 +34,6 @@ export function StatusPage() {
   const [server, setServer] = useState<ServerStatus | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [tiles, setTiles] = useState<boolean | null>(config.app.map.useOnlineTiles ? null : false);
-  useScene({ kind: "none" });
 
   useEffect(() => {
     api.get<ServerStatus>("/api/status").then(setServer, setError);
@@ -47,7 +45,8 @@ export function StatusPage() {
   const Shell = user ? AppShell : PublicShell;
   return (
     <Shell>
-      <section className="page-panel" aria-label="System status">
+      <div className="page">
+<section className="page-panel" aria-label="System status">
         <div className="panel-header"><h1>System status</h1></div>
         <div className="panel-body">
           <ErrorNotice error={error} />
@@ -85,6 +84,7 @@ export function StatusPage() {
           )}
         </div>
       </section>
+      </div>
     </Shell>
   );
 }

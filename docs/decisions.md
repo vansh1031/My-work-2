@@ -162,3 +162,29 @@ Format: **What** / **Why** / **Trade-off accepted**.
 - **What:** the Desktop installers workflow builds browser mode unless a server address is typed, then server mode. The desktop window allows WebAssembly (`'wasm-unsafe-eval'` in its content security policy), which the built-in database needs.
 - **Trade-off:** desktop data stays on that computer, as in the browser.
 
+### D-037 The globe and 3D floor are panels, not backgrounds (replaces the "behind everything, dimmed" design)
+- **What:** the globe sits in its own panel next to the factory list; the 3D floor in its own panel next to the machine tiles. No dimming, no blur, nothing layered. People can drag and zoom the globe, click pins, and click machines in 3D.
+- **Why:** the owner found the layered background confusing and slow. Cards over a dimmed, blurred moving picture are hard to read, and the blur forced the browser to redo work on every frame. Products in this field show the map as its own clear panel (MachineMetrics, Guidewheel, Siemens Intosite).
+- **Trade-off:** the globe and floor take part of the screen instead of the whole background.
+
+### D-038 Faster globe start
+- **What:** state outlines are split into one small file per country (`web/public/geo/states/<ISO>.json`, India about 25 KB instead of 1.7 MB for the world) and loaded only when the globe flies to that country. The country outlines and the online map style are fetched at the same time, and the online style gets 4 seconds instead of 5. The map draws at most 1.5 times the screen's pixel density. Idle rotation stops when the tab is hidden or someone drags the globe.
+- **Why:** the old start waited for 2 MB of outlines, then up to 5 seconds for the online style, before drawing anything. Measured on the built-in globe: the globe now appears about 1 second after the page.
+
+### D-039 Online map style: OpenFreeMap Liberty
+- **What:** `map.tileStyleUrl` is now `https://tiles.openfreemap.org/styles/liberty`.
+- **Why:** the globe is now a visible panel, and Liberty looks like a real map of the Earth. It is OpenFreeMap's official, complete style; their dark styles are marked unfinished. The built-in dark globe is still used when the online map cannot be reached.
+
+### D-040 Screens rebuilt around one header and one clear action per step
+- **What:** every page has a header with a breadcrumb, the title, real status totals and tabs. Home: a row shows the factory on the globe, its Open button opens it. Factory: a tile opens the machine's details under the 3D view (no separate machine page; the address `/factories/3/machines/12` still works).
+- **Why:** the owner found it unclear what to click, where they were, and what the overall situation was.
+- **Trade-off:** the machine details share the screen with the 3D view instead of having the whole page.
+
+### D-041 Unused settings and the animation library removed
+- **What:** `theme.json` `background.*` and `panelOpacity`, `animation.json` `cards.*`, and the Framer Motion library are gone.
+- **Why:** nothing is dimmed or animated in that way any more; settings that do nothing are confusing.
+
+### D-042 Sign-in limit is a server setting
+- **What:** `LOGIN_RATE_LIMIT_PER_MINUTE` (default 10).
+- **Why:** the browser tests sign in many times a minute and hit the limit; real installations keep 10.
+

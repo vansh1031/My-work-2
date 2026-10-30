@@ -84,7 +84,8 @@ export async function buildApp(ctx: NodeContext, opts: { logger?: boolean | obje
     app.route({
       method: route.method,
       url: route.path,
-      config: route.rateLimitPerMinute ? { rateLimit: { max: route.rateLimitPerMinute, timeWindow: "1 minute" } } : {},
+      // The sign-in route's limit can be changed per installation with LOGIN_RATE_LIMIT_PER_MINUTE.
+      config: route.rateLimitPerMinute ? { rateLimit: { max: ctx.env.loginRateLimitPerMinute || route.rateLimitPerMinute, timeWindow: "1 minute" } } : {},
       handler: async (req, reply) => {
         const file = await readFile(req, route, ctx);
         const result = await route.handler(

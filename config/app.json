@@ -15,7 +15,7 @@
   },
   "map": {
     "useOnlineTiles": true,
-    "tileStyleUrl": "https://tiles.openfreemap.org/styles/positron"
+    "tileStyleUrl": "https://tiles.openfreemap.org/styles/liberty"
   },
   "features": {
     "globe": true,

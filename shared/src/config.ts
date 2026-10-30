@@ -30,8 +30,6 @@ export interface PublicConfig {
     cornerRadiusPx: number;
     palettes: { dark: Palette; light: Palette };
     statusColors: Record<"running" | "stopped" | "aborted" | "shift_ended" | "unknown", string>;
-    panelOpacity: number;
-    background: { dimOpacity: number; dimOpacityWhileMoving: number; blurPx: number };
     globe: {
       ocean: string; land: string; countryBorder: string; stateBorder: string; highlightFill: string;
       highlightFillOpacity: number; highlightBorder: string; marker: string; markerRing: string;
@@ -49,7 +47,6 @@ export interface PublicConfig {
       idleOrbitDegreesPerSecond: number; focusDurationMs: number; switchDurationMs: number;
       switchSweepDegrees: number; otherMachinesOpacityWhenFocused: number;
     };
-    cards: { enterDurationMs: number; enterStaggerMs: number };
   };
   app: {
     dataMode: "browser" | "server";

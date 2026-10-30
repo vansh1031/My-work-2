@@ -35,12 +35,6 @@
     "shift_ended": "#8b949e",
     "unknown": "#57606a"
   },
-  "panelOpacity": 0.9,
-  "background": {
-    "dimOpacity": 0.35,
-    "dimOpacityWhileMoving": 0.12,
-    "blurPx": 1
-  },
   "globe": {
     "ocean": "#0f2236",
     "land": "#2a3f56",

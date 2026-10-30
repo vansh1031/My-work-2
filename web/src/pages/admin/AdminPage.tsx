@@ -1,5 +1,4 @@
 import { useSearchParams } from "react-router-dom";
-import { useScene } from "../../state/SceneProvider";
 import { AuditTab } from "./AuditTab";
 import { FactoriesTab } from "./FactoriesTab";
 import { UsersTab } from "./UsersTab";
@@ -13,9 +12,9 @@ const TABS = [
 export function AdminPage() {
   const [params, setParams] = useSearchParams();
   const current = TABS.find((t) => t.id === params.get("tab")) ?? TABS[0];
-  useScene({ kind: "none" });
   return (
-    <section className="page-panel" aria-label="Admin">
+    <div className="page">
+<section className="page-panel" aria-label="Admin">
       <div className="panel-header">
         <h1>Admin</h1>
         <div className="tabs" role="tablist">
@@ -30,5 +29,6 @@ export function AdminPage() {
         <current.Component />
       </div>
     </section>
+      </div>
   );
 }

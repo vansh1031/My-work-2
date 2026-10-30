@@ -2,15 +2,17 @@
 
 Short summary of where the project stands, for a new chat or a new AI. Keep it short. Update it at the end of every change.
 
-Last updated: 2026-10-30
+Last updated: 2026-10-30 (0.3.0)
 
 ## Current state
-- Version 0.2.0. Phases 0 to 8 built; browser mode added (phase 8b). All waiting for owner review and quizzes (`docs/phases.md`).
+- Version 0.3.0. Phases 0 to 8 built; browser mode (8b) and clearer screens (8c) added. All waiting for owner review and quizzes (`docs/phases.md`).
+- Screens: the globe and 3D floor are panels beside the lists (no background layer any more). Home shows status totals, a factory list with Open buttons and the globe; the factory page shows tiles, the 3D floor and the chosen machine's details.
 - **Browser mode is the default:** the whole app, including the database (PGlite), runs in the browser or desktop window. No server, no install. Published as a website by `.github/workflows/pages.yml`.
 - Server mode still works (Node + PostgreSQL) and uses the same backend code (`server/src/core`).
 - Docker was removed at the owner's request (D-034).
 - Repositories: `vansh1031/My-work` holds version 0.1.0 (with Docker). `vansh1031/My-work-2` holds this version.
 - Tests: 67 backend tests (API suite on PGlite and PostgreSQL, browser storage, config, Excel, globe) and 26 browser tests (13 per mode) pass.
+- Research for the redesign (similar products and open-source projects) is summarised in docs/decisions.md D-037.
 - Checked by hand: Linux desktop app starts in browser mode, signs in, and stores its database on disk. Windows desktop app not tried on a real Windows computer yet.
 
 ## Not yet done
@@ -30,7 +32,8 @@ Last updated: 2026-10-30
 - Workers must be created as `new SharedWorker(new URL(...))` in one expression or the build will not bundle them (rules.md, never 11).
 - In the Linux desktop window, workers cannot use IndexedDB or download files, so the backend falls back to running in the page there (D-031, D-032).
 - History tables are append-only (D-010).
-- The background never talks to the backend: pages describe the scene with `useScene()` and `BackgroundLayer` draws it.
+- The 3D views live in `web/src/views` and are shown through `components/ViewPanel.tsx`, which handles missing WebGL and failures (BG-001).
+- State outlines are one file per country in `web/public/geo/states/`; rebuild with `npm run geo` (scripts/build-geo.mjs).
 - MapLibre 6 needs `setWorkerUrl` (D-021). drei `Html` crashes on unmount (D-014).
 - Server mode: the server serves only files that existed when it started; restart it after rebuilding.
 

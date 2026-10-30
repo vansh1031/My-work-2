@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 (2026-10-30)
+Clearer screens and a faster globe.
+
+### Changed
+- The globe and the 3D factory floor are now panels next to the lists, not dimmed backgrounds. People can drag and zoom the globe, click its pins, and click machines in 3D.
+- Home: status totals at the top, factory list with an Open button on each row, globe panel with the selected factory and an "Open factory" button.
+- Factory: breadcrumb, status totals and tabs at the top; machine tiles on the left; 3D floor and the chosen machine's details on the right. The separate machine page is replaced by these details (its address still works).
+- Globe starts in about 1 second: state outlines load per country, the map style and outlines load at the same time, no blur, rotation pauses when hidden or when someone drags the globe.
+- Online map style: OpenFreeMap Liberty.
+- Tablet and phone: the globe or 3D view comes first, then details, then the list.
+
+### Removed
+- Settings `theme.json` `background.*`, `panelOpacity`, `animation.json` `cards.*`, and the Framer Motion library.
+
+### Added
+- Server setting `LOGIN_RATE_LIMIT_PER_MINUTE`.
+
 ## 0.2.0 (2026-10-30)
 Browser mode: the app runs without installing anything.
 

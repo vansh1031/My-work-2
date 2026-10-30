@@ -35,7 +35,6 @@ function applyTheme(config: PublicConfig) {
     "--danger": p.danger,
     "--focus": p.focus,
     "--radius": `${theme.cornerRadiusPx}px`,
-    "--panel-opacity": String(theme.panelOpacity),
     "--font": theme.fontFamily,
     "--marker": theme.globe.marker,
     "--marker-ring": theme.globe.markerRing,

@@ -8,7 +8,6 @@ import { formatBytes, formatDate, formatDateTime } from "../lib/format";
 import { useFactory, useUploads } from "../lib/queries";
 import { ErrorNotice } from "../components/Notice";
 import { FactoryHeader } from "../components/FactoryHeader";
-import { useScene } from "../state/SceneProvider";
 
 export function UploadsPage() {
   const id = Number(useParams().factoryId);
@@ -16,12 +15,12 @@ export function UploadsPage() {
   const { config } = useConfig();
   const factoryQ = useFactory(id);
   const uploadsQ = useUploads(id);
-  useScene(factoryQ.data ? { kind: "floor", factoryId: id, machines: factoryQ.data.machines, selectedId: null } : { kind: "none" });
   const canUpload = Boolean(user?.canUpdateStatus && config.app.features.excelUpload);
 
   return (
-    <section className="page-panel" aria-label="Uploads">
+    <div className="page">
       {factoryQ.data && <FactoryHeader factory={factoryQ.data} />}
+      <section className="page-panel" aria-label="Uploads">
       <div className="panel-body">
         <div className="row-between">
           <p className="muted">Every uploaded sheet is kept permanently. When a day is uploaded again, the newer file is used and the older one is marked as replaced.</p>
@@ -61,6 +60,7 @@ export function UploadsPage() {
           </div>
         )}
       </div>
-    </section>
+      </section>
+    </div>
   );
 }

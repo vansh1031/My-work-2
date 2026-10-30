@@ -9,7 +9,6 @@ import { ErrorNotice } from "../components/Notice";
 import { FactoryHeader } from "../components/FactoryHeader";
 import { StatusBadge } from "../components/StatusBadge";
 import { StatusGrid } from "../components/StatusGrid";
-import { useScene } from "../state/SceneProvider";
 
 export function HistoryPage() {
   const id = Number(useParams().factoryId);
@@ -19,7 +18,6 @@ export function HistoryPage() {
   const [from, setFrom] = useState(addDays(todayIso(), -13));
   const [machineId, setMachineId] = useState<number | "">("");
   const historyQ = useHistory(id, from, to, machineId || undefined);
-  useScene(factoryQ.data ? { kind: "floor", factoryId: id, machines: factoryQ.data.machines, selectedId: machineId || null } : { kind: "none" });
 
   const factory = factoryQ.data;
   const days = useMemo(() => (from <= to ? daysBetween(from, to) : []), [from, to]);
@@ -36,8 +34,9 @@ export function HistoryPage() {
   });
 
   return (
-    <section className="page-panel" aria-label="History">
+    <div className="page">
       {factory && <FactoryHeader factory={factory} />}
+      <section className="page-panel" aria-label="History">
       <div className="panel-body">
         <div className="row" style={{ alignItems: "flex-end" }}>
           <div className="field">
@@ -90,6 +89,7 @@ export function HistoryPage() {
           </div>
         </div>
       </div>
-    </section>
+      </section>
+    </div>
   );
 }

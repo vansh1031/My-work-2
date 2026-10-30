@@ -5,7 +5,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { useConfig } from "../config/ConfigProvider";
 import { DATA_MODE, localBackendKind } from "../lib/api";
 import { getServerAddress } from "../lib/serverAddress";
-import { useSceneState } from "../state/SceneProvider";
+import { getDebugInfo, onDebugInfo } from "../lib/debug";
 
 const recentErrors: string[] = [];
 window.addEventListener("error", (e) => recentErrors.unshift(`${new Date().toLocaleTimeString()} ${e.message}`));
@@ -14,7 +14,9 @@ window.addEventListener("unhandledrejection", (e) => recentErrors.unshift(`${new
 export function DebugPanel() {
   const { config, reduceMotion } = useConfig();
   const { user } = useAuth();
-  const { scene, moving, debugInfo } = useSceneState();
+  const [, refresh] = useState(0);
+  useEffect(() => onDebugInfo(() => refresh((n) => n + 1)), []);
+  const debugInfo = getDebugInfo();
   const location = useLocation();
   const [fps, setFps] = useState(0);
 
@@ -37,7 +39,6 @@ export function DebugPanel() {
   }, []);
 
   if (!config.app.debug) return null;
-  const selected = scene.kind === "none" ? null : scene.selectedId;
   return (
     <div className="debug" aria-label="Debug panel">
       <div><b>Version</b> {__APP_VERSION__}</div>
@@ -45,7 +46,6 @@ export function DebugPanel() {
       {DATA_MODE === "server" && <div><b>Server</b> {getServerAddress() || window.location.origin}</div>}
       <div><b>Screen</b> {location.pathname}</div>
       <div><b>User</b> {user ? `${user.username} (${user.role}${user.canUpdateStatus ? ", can update" : ""})` : "not signed in"}</div>
-      <div><b>Background</b> {scene.kind} {selected !== null ? `, selected #${selected}` : ""} {moving ? "(moving)" : ""}</div>
       <div><b>Reduce motion</b> {String(reduceMotion)}</div>
       <div><b>FPS</b> {fps}</div>
       {Object.entries(debugInfo).map(([k, v]) => (

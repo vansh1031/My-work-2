@@ -16,6 +16,8 @@ export interface Env {
   initialAdminPassword: string;
   logLevel: string;
   seedSampleData: boolean;
+  /** Sign-in attempts allowed per minute from one address (protects against password guessing). */
+  loginRateLimitPerMinute: number;
 }
 
 export function readEnv(source: NodeJS.ProcessEnv = process.env): Env {
@@ -30,5 +32,6 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): Env {
     initialAdminPassword: source.INITIAL_ADMIN_PASSWORD ?? "change-me-now",
     logLevel: source.LOG_LEVEL ?? "info",
     seedSampleData: (source.SEED_SAMPLE_DATA ?? "false") === "true",
+    loginRateLimitPerMinute: Number(source.LOGIN_RATE_LIMIT_PER_MINUTE ?? 10),
   };
 }

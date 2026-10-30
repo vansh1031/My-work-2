@@ -29,24 +29,25 @@ There is no live connection to the machines. Status comes from an Excel sheet up
 - Closing the app signs the user out.
 
 ### 3.2 Home page: factories
-- Cards in a side panel: factory photo, name, "City, State", country, machine count, status summary.
+- At the top: totals across the user's factories (factories, machines, and machines per status).
+- A list of factories: photo, name, "City, State", country, machine count, status counts, and an Open button.
 - Search and filters (country, state) appear when there are more than `showSearchWhenMoreThan` factories.
 - Users see only their assigned factories. Admins see all.
-- Behind the cards: a dimmed 3D globe that slowly rotates.
+- Next to the list: a 3D globe in its own panel that slowly rotates; people can drag and zoom it.
 - Clicking a card flies the globe to the factory: country, then state (highlighted), then city (pin).
 - Switching factories: close by (under `nearDistanceKm`) slides; far away zooms out, rotates, zooms in.
-- A "View factory" button on the selected card opens the factory.
-- Clicking empty space clears the selection and the globe zooms out.
+- The selected factory shows as a card on the globe with an "Open factory" button. Clicking a pin on the globe selects that factory.
+- The card's close button clears the selection and the globe zooms out.
 
 ### 3.3 Factory page: machines
-- Machine cards with a status dot and the status word: Running (green), Stopped (amber), Aborted (red), Shift ended (grey). "No data" if nothing was ever recorded.
+- Machine tiles with a coloured edge, a status dot and the status word: Running (green), Stopped (amber), Aborted (red), Shift ended (grey). "No data" if nothing was ever recorded.
 - Filter by status, search by name or ID.
-- Behind the cards: a 3D factory floor with all machines and a coloured ring under each one showing its status.
-- Clicking a machine flies the camera to it, fades the others and slowly turns it. Switching machines sweeps the camera around the floor. Clicking empty space zooms back out.
-- "Open machine" opens the machine page.
+- Next to the tiles: a 3D factory floor panel with all machines and a coloured ring under each one showing its status. Clicking a machine in 3D selects it.
+- Clicking a machine flies the camera to it, fades the others and slowly turns it. Switching machines sweeps the camera around the floor. Closing the details (or clicking the tile again) zooms back out.
+- Clicking a tile opens the machine's details under the 3D view (section 3.4). The page address and the breadcrumb follow, so a machine can be linked to.
 - Tabs: Machines, History, Uploads.
 
-### 3.4 Machine page
+### 3.4 Machine details
 - Name, ID, type, description.
 - Status of each shift for the latest day with data.
 - The last 14 days as coloured squares, total times aborted.

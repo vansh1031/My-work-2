@@ -33,7 +33,7 @@ How we build. Applies to people and to AI assistants. An AI must read this file 
 | Screens | React, React Router (HashRouter) | another UI framework |
 | Server data | TanStack Query via `web/src/lib/queries.ts` | ad hoc fetch in components |
 | Server calls | `web/src/lib/api.ts` only | fetch elsewhere |
-| Animation | Framer Motion (cards), the director classes (globe, floor) | extra animation libraries |
+| Animation | CSS transitions, and the camera classes for the globe and floor (`globeDirector.ts`, `CameraRig`) | animation libraries |
 | Maps | MapLibre | Mapbox, Google Maps (paid, keys) |
 | 3D | three.js, React Three Fiber, drei (useGLTF only) | drei `Html` (it crashes on unmount, see D-014) |
 | Icons | lucide-react | emoji, icon fonts |
@@ -48,7 +48,7 @@ How we build. Applies to people and to AI assistants. An AI must read this file 
 - **App:** every failed call becomes an `ApiError` with the server code, or `NET-001` when the server is unreachable. Show it with `<ErrorNotice error={...} />`, which prints the message and the code.
 - **Browser mode startup:** if the built-in backend cannot start, every request answers `LOCAL-001` (or `CONFIG-001`, `LOCAL-002`) and the app shows "Cannot start" with the code.
 - **Excel problems** are not exceptions: they are listed in the preview (`XL-0xx` errors block saving, `XL-1xx` warnings do not).
-- **Background (globe, floor):** failures must never break the page. `BackgroundLayer` catches them and shows the plain background (`BG-001`).
+- **3D views (globe, floor):** failures must never break the page. `ViewPanel` catches them and shows a short message in the panel (`BG-001`).
 - **Config:** a bad config stops the server at startup with `CONFIG-001` and a list of every problem (file, field, what is wrong).
 
 ## 5. Code style

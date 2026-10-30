@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { ErrorNotice, Notice } from "../components/Notice";
-import { useScene } from "../state/SceneProvider";
 
 const MIN = 8;
 
@@ -14,7 +13,6 @@ export function ChangePasswordPage() {
   const [repeat, setRepeat] = useState("");
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
-  useScene({ kind: "globe", factories: [], selectedId: null });
 
   async function submit(e: FormEvent) {
     e.preventDefault();

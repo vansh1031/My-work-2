@@ -4,15 +4,12 @@ import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router-d
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import { ConfigProvider } from "./config/ConfigProvider";
-import { SceneProvider } from "./state/SceneProvider";
-import { BackgroundLayer } from "./background/BackgroundLayer";
 import { AppShell } from "./components/AppShell";
 import { DebugPanel } from "./components/DebugPanel";
 import { LoginPage } from "./pages/LoginPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { HomePage } from "./pages/HomePage";
 import { FactoryPage } from "./pages/FactoryPage";
-import { MachinePage } from "./pages/MachinePage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { UploadsPage } from "./pages/UploadsPage";
 import { UploadPage } from "./pages/UploadPage";
@@ -41,9 +38,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <ConfigProvider>
         <AuthProvider>
-          <SceneProvider>
             <HashRouter>
-              <BackgroundLayer />
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/privacy" element={<LegalPage page="privacy" />} />
@@ -52,7 +47,7 @@ export function App() {
                 <Route path="/account/password" element={<Protected allowPasswordChange><ChangePasswordPage /></Protected>} />
                 <Route path="/" element={<Protected><HomePage /></Protected>} />
                 <Route path="/factories/:factoryId" element={<Protected><FactoryPage /></Protected>} />
-                <Route path="/factories/:factoryId/machines/:machineId" element={<Protected><MachinePage /></Protected>} />
+                <Route path="/factories/:factoryId/machines/:machineId" element={<Protected><FactoryPage /></Protected>} />
                 <Route path="/factories/:factoryId/history" element={<Protected><HistoryPage /></Protected>} />
                 <Route path="/factories/:factoryId/uploads" element={<Protected><UploadsPage /></Protected>} />
                 <Route path="/factories/:factoryId/upload" element={<Protected><UploadPage /></Protected>} />
@@ -61,7 +56,6 @@ export function App() {
               </Routes>
               <DebugPanel />
             </HashRouter>
-          </SceneProvider>
         </AuthProvider>
       </ConfigProvider>
     </QueryClientProvider>

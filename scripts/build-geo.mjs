@@ -5,7 +5,7 @@
 // Needs: ne_50m_admin_0_countries.geojson, ne_10m_admin_1_states_provinces.geojson
 // Download from https://github.com/nvkelso/natural-earth-vector/tree/master/geojson
 import { execFileSync } from "node:child_process";
-import { mkdirSync, statSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const src = process.argv[2];
@@ -37,6 +37,18 @@ run([
   "-o", path.join(out, "states.json"), "format=geojson", "precision=0.001",
 ]);
 
-for (const f of ["countries.json", "states.json"]) {
-  console.log(f, Math.round(statSync(path.join(out, f)).size / 1024), "KB");
+// One small file per country (by ISO code), so the globe loads only the states of the country it flies to.
+const all = JSON.parse(readFileSync(path.join(out, "states.json"), "utf8"));
+const byCountry = {};
+for (const f of all.features) {
+  const iso = /^[A-Z]{2}$/.test(f.properties.iso ?? "") ? f.properties.iso : "XX";
+  (byCountry[iso] ??= []).push(f);
 }
+rmSync(path.join(out, "states"), { recursive: true, force: true });
+mkdirSync(path.join(out, "states"));
+for (const [iso, features] of Object.entries(byCountry)) {
+  writeFileSync(path.join(out, "states", `${iso}.json`), JSON.stringify({ type: "FeatureCollection", features }));
+}
+rmSync(path.join(out, "states.json"));
+console.log("countries.json", Math.round(statSync(path.join(out, "countries.json")).size / 1024), "KB");
+console.log(`states: ${Object.keys(byCountry).length} files in geo/states/`);

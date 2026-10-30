@@ -3,7 +3,7 @@
 //   4. Confirm. Nothing is saved until step 4, and step 4 is blocked while the preview shows errors.
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Download, FileSpreadsheet } from "lucide-react";
+import { ChevronRight, Download, FileSpreadsheet } from "lucide-react";
 import type { UploadPreview } from "@fa/shared";
 import { useConfig } from "../config/ConfigProvider";
 import { api } from "../lib/api";
@@ -11,7 +11,6 @@ import { formatDate, todayIso } from "../lib/format";
 import { useFactory, useInvalidateStatus } from "../lib/queries";
 import { ErrorNotice, Notice } from "../components/Notice";
 import { StatusBadge } from "../components/StatusBadge";
-import { useScene } from "../state/SceneProvider";
 
 export function UploadPage() {
   const id = Number(useParams().factoryId);
@@ -24,7 +23,6 @@ export function UploadPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [done, setDone] = useState<{ uploadId: number; workDate: string } | null>(null);
-  useScene(factoryQ.data ? { kind: "floor", factoryId: id, machines: factoryQ.data.machines, selectedId: null } : { kind: "none" });
 
   const factory = factoryQ.data;
 
@@ -66,13 +64,20 @@ export function UploadPage() {
   }
 
   return (
-    <section className="page-panel" aria-label="Upload a day's sheet">
-      <div className="panel-header">
-        <Link to={`/factories/${id}/uploads`} className="small row" style={{ gap: "0.3rem" }}>
-          <ArrowLeft aria-hidden size={14} /> Uploads
-        </Link>
+    <div className="page">
+      <header className="page-header">
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <Link to={`/?f=${id}`}>Factories</Link>
+          <ChevronRight size={14} aria-hidden />
+          <Link to={`/factories/${id}`}>{factory?.name ?? "Factory"}</Link>
+          <ChevronRight size={14} aria-hidden />
+          <Link to={`/factories/${id}/uploads`}>Uploads</Link>
+          <ChevronRight size={14} aria-hidden />
+          <span aria-current="page">Upload a day's sheet</span>
+        </nav>
         <h1>Upload a day's sheet{factory ? ` for ${factory.name}` : ""}</h1>
-      </div>
+      </header>
+      <section className="page-panel" aria-label="Upload a day's sheet">
       <div className="panel-body">
         <div className="section">
           <div className="section-title">Step 1. Get the template (optional)</div>
@@ -181,6 +186,7 @@ export function UploadPage() {
           </div>
         )}
       </div>
-    </section>
+      </section>
+    </div>
   );
 }

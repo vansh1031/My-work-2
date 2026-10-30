@@ -42,12 +42,6 @@ export const themeSchema = z.object({
     shift_ended: hexColor,
     unknown: hexColor,
   }),
-  panelOpacity: opacity,
-  background: z.object({
-    dimOpacity: opacity,
-    dimOpacityWhileMoving: opacity,
-    blurPx: z.number().min(0).max(20),
-  }),
   globe: z.object({
     ocean: hexColor,
     land: hexColor,
@@ -87,10 +81,6 @@ export const animationSchema = z.object({
     switchDurationMs: positiveMs,
     switchSweepDegrees: z.number().min(0).max(720),
     otherMachinesOpacityWhenFocused: opacity,
-  }),
-  cards: z.object({
-    enterDurationMs: positiveMs,
-    enterStaggerMs: positiveMs,
   }),
 });
 

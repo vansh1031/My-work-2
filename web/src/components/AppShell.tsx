@@ -17,10 +17,8 @@ export function Brand() {
 }
 
 export function Footer() {
-  const { config } = useConfig();
   return (
     <footer className="footer">
-      {config.app.map.useOnlineTiles && <span>Map data from OpenStreetMap contributors, OpenMapTiles and OpenFreeMap. Boundaries from Natural Earth.</span>}
       <span>Version {__APP_VERSION__}</span>
       <Link to="/status">System status</Link>
       <Link to="/privacy">Privacy policy</Link>

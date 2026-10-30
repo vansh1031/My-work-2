@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expectNoHorizontalScroll, sheet, signIn, signInAdmin, todayIso } from "./helpers";
+
+/** Home page: the "Open" button on a factory's row. */
+async function openFactory(page: Page, name: string) {
+  await page.getByRole("button", { name: `Open ${name}` }).click();
+  await expect(page.locator("[data-testid^=machine-tile-]").first()).toBeVisible();
+}
 
 test.describe.configure({ mode: "serial" });
 
@@ -23,19 +30,24 @@ test("admin first sign-in, globe home, factory, machine", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await signInAdmin(page);
-  await expect(page.locator("[data-testid^=factory-card-]")).toHaveCount(6);
-  await expect(page.locator("[data-background=globe]")).toBeAttached();
+  await expect(page.locator("[data-testid^=factory-row-]")).toHaveCount(6);
+  await expect(page.getByRole("listitem").filter({ hasText: "Factories" })).toContainText("6");
+  await expect(page.locator("[data-testid=globe] canvas")).toBeAttached();
 
-  await page.getByTestId(/factory-card-/).filter({ hasText: "Indore Plant" }).click();
+  // Showing a factory on the globe, then opening it from the card on the globe.
+  await page.getByRole("button", { name: "Show Indore Plant on the globe" }).click();
   await expect(page).toHaveURL(/\?f=\d+/);
-  await page.getByRole("button", { name: "View factory" }).click();
+  await expect(page.getByTestId("selected-factory")).toContainText("Indore Plant");
+  await page.getByTestId("selected-factory").getByRole("button", { name: "Open factory" }).click();
   await expect(page.getByRole("heading", { name: "Indore Plant" })).toBeVisible();
-  await expect(page.locator("[data-testid^=machine-card-]")).toHaveCount(6);
-  await expect(page.locator("[data-background^=floor-]")).toBeAttached();
+  await expect(page.locator("[data-testid^=machine-tile-]")).toHaveCount(6);
+  await expect(page.locator("[data-testid=factory-floor]")).toBeAttached();
 
-  await page.getByTestId("machine-card-M-03").click();
-  await page.getByRole("button", { name: "Open machine" }).click();
+  // A tile opens the machine's details next to the 3D view; the address and breadcrumb follow.
+  await page.getByTestId("machine-tile-M-03").click();
   await expect(page.getByRole("heading", { name: "Hydraulic Press" })).toBeVisible();
+  await expect(page).toHaveURL(/\/machines\/\d+/);
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Hydraulic Press");
   await page.getByRole("button", { name: /Next machine/ }).click();
   await expect(page.getByRole("heading", { name: "Injection Moulding Machine" })).toBeVisible();
   expect(errors).toEqual([]);
@@ -43,23 +55,20 @@ test("admin first sign-in, globe home, factory, machine", async ({ page }) => {
 
 test("viewer sees only assigned factories and no edit or upload controls", async ({ page }) => {
   await signIn(page, "viewer", "sample-pass-1");
-  await expect(page.locator("[data-testid^=factory-card-]")).toHaveCount(2);
+  await expect(page.locator("[data-testid^=factory-row-]")).toHaveCount(2);
   await expect(page.getByRole("link", { name: "Admin" })).toHaveCount(0);
-  await page.locator("[data-testid^=factory-card-]").first().click();
-  await page.getByRole("button", { name: "View factory" }).click();
+  await page.getByRole("button", { name: /^Open / }).first().click();
   await page.getByRole("link", { name: "Uploads" }).click();
   await expect(page.getByText("Upload a day's sheet")).toHaveCount(0);
   await page.getByRole("link", { name: "Machines" }).click();
-  await page.getByTestId("machine-card-M-01").click();
-  await page.getByRole("button", { name: "Open machine" }).click();
+  await page.getByTestId("machine-tile-M-01").click();
   await expect(page.getByRole("heading", { name: "CNC Milling Centre" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Update status" })).toHaveCount(0);
 });
 
 test("supervisor uploads a sheet: errors block saving, a correct file is saved", async ({ page }) => {
   await signIn(page, "supervisor", "sample-pass-1");
-  await page.getByTestId(/factory-card-/).filter({ hasText: "Indore Plant" }).click();
-  await page.getByRole("button", { name: "View factory" }).click();
+  await openFactory(page, "Indore Plant");
   await page.getByRole("link", { name: "Uploads" }).click();
   await page.getByRole("link", { name: "Upload a day's sheet" }).click();
 
@@ -88,18 +97,16 @@ test("supervisor uploads a sheet: errors block saving, a correct file is saved",
   await expect(page.getByText(/Saved\. Upload #\d+/)).toBeVisible();
 
   await page.getByRole("link", { name: "See the machines" }).click();
-  await expect(page.getByTestId("machine-card-M-04")).toContainText("Aborted");
-  await expect(page.getByTestId("machine-card-M-04")).toContainText("aborted 3 times");
+  await expect(page.getByTestId("machine-tile-M-04")).toContainText("Aborted");
+  await expect(page.getByTestId("machine-tile-M-04")).toContainText("aborted 3 times");
   await page.getByRole("link", { name: "Uploads" }).click();
   await expect(page.getByRole("cell", { name: /^good\.xlsx/ })).toBeVisible();
 });
 
 test("supervisor edits a status by hand and the admin change log records it", async ({ page }) => {
   await signIn(page, "supervisor", "sample-pass-1");
-  await page.getByTestId(/factory-card-/).filter({ hasText: "Indore Plant" }).click();
-  await page.getByRole("button", { name: "View factory" }).click();
-  await page.getByTestId("machine-card-M-02").click();
-  await page.getByRole("button", { name: "Open machine" }).click();
+  await openFactory(page, "Indore Plant");
+  await page.getByTestId("machine-tile-M-02").click();
   await page.getByRole("button", { name: "Update status" }).click();
   await page.selectOption("#ed-shift", "2");
   await page.selectOption("#ed-status", "stopped");
@@ -133,7 +140,7 @@ test("admin creates a user, who must change password and sees only their factory
   await ravi.fill("#new", "ravi-second-2");
   await ravi.fill("#repeat", "ravi-second-2");
   await ravi.click("button[type=submit]");
-  await expect(ravi.locator("[data-testid^=factory-card-]")).toHaveCount(1);
+  await expect(ravi.locator("[data-testid^=factory-row-]")).toHaveCount(1);
   await expect(ravi.getByText("Pune Assembly")).toBeVisible();
 });
 
@@ -149,15 +156,14 @@ test("admin uploads a factory photo and it shows on the card", async ({ page }) 
   await page.locator("input[type=file][accept^='image']").setInputFiles({ name: "pune.png", mimeType: "image/png", buffer: png });
   await expect(page.getByText("Replace photo")).toBeVisible();
   await page.goto("/#/");
-  const card = page.getByTestId(/factory-card-/).filter({ hasText: "Pune Assembly" });
+  const card = page.getByTestId(/factory-row-/).filter({ hasText: "Pune Assembly" });
   await expect(card.getByRole("img", { name: "Photo of Pune Assembly" })).toBeVisible();
   await expect.poll(() => card.locator("img").evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBe(2);
 });
 
 test("history shows the grid and totals", async ({ page }) => {
   await signInAdmin(page);
-  await page.getByTestId(/factory-card-/).filter({ hasText: "Indore Plant" }).click();
-  await page.getByRole("button", { name: "View factory" }).click();
+  await openFactory(page, "Indore Plant");
   await page.getByRole("link", { name: "History" }).click();
   await expect(page.getByText("Totals for this period")).toBeVisible();
   await expect(page.getByRole("row", { name: /M-04 Injection Moulding Machine/ })).toBeVisible();
@@ -174,9 +180,8 @@ for (const size of [
     await signInAdmin(page);
     await expectNoHorizontalScroll(page);
     await page.screenshot({ path: info.outputPath(`${size.name}-home.png`) });
-    await page.getByTestId(/factory-card-/).filter({ hasText: "Indore Plant" }).click();
-    await page.getByRole("button", { name: "View factory" }).click();
-    await expect(page.locator("[data-testid^=machine-card-]")).toHaveCount(6);
+    await openFactory(page, "Indore Plant");
+    await expect(page.locator("[data-testid^=machine-tile-]")).toHaveCount(6);
     await expectNoHorizontalScroll(page);
     await page.screenshot({ path: info.outputPath(`${size.name}-factory.png`) });
   });

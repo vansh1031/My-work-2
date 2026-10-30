@@ -7,8 +7,8 @@ An app that shows a company's factories on a 3D globe and the status of every ma
 - Runs in the browser with its own built-in database (browser mode, default), or against a shared server (server mode, later)
 - Windows and Linux desktop app (Tauri), self-contained
 - Sign-in with username and password; the admin creates users and decides who sees which factory
-- Home: factory cards, with a globe behind them that flies country, then state, then city
-- Factory: machine cards with status, with a 3D factory floor behind them
+- Home: status totals, factory list, and a globe panel that flies country, then state, then city
+- Factory: machine tiles, a 3D factory floor panel, and machine details beside it
 - Machine: details, shifts, last 14 days, manual status edit (if allowed)
 - Daily Excel upload with a preview, permanent upload history, corrected uploads
 - History grid, change log, system status page, debug panel

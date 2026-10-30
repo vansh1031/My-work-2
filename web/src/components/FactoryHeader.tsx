@@ -1,28 +1,45 @@
-import { Link, NavLink } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 import type { FactorySummary } from "@fa/shared";
 import { useConfig } from "../config/ConfigProvider";
+import { Summary } from "./Summary";
 
-/** Name, address and the Machines / History / Uploads tabs, shared by every factory screen. */
-export function FactoryHeader({ factory }: { factory: FactorySummary }) {
+/** Breadcrumb, name, address, the factory's status numbers and the Machines / History / Uploads tabs. */
+export function FactoryHeader({ factory, machineName }: { factory: FactorySummary; machineName?: string }) {
   const { config } = useConfig();
+  const onMachine = useLocation().pathname.includes("/machines/");
   return (
-    <div className="panel-header">
-      <Link to={`/?f=${factory.id}`} className="small row" style={{ gap: "0.3rem" }}>
-        <ArrowLeft aria-hidden size={14} /> All factories
-      </Link>
-      <div className="row-between">
-        <h1>{factory.name}</h1>
-        {factory.isSample && <span className="tag" title="This factory and its data are sample data">Sample</span>}
+    <header className="page-header">
+      <nav className="breadcrumb" aria-label="Breadcrumb">
+        <Link to={`/?f=${factory.id}`}>Factories</Link>
+        <ChevronRight size={14} aria-hidden />
+        {machineName ? <Link to={`/factories/${factory.id}`}>{factory.name}</Link> : <span aria-current="page">{factory.name}</span>}
+        {machineName && (
+          <>
+            <ChevronRight size={14} aria-hidden />
+            <span aria-current="page">{machineName}</span>
+          </>
+        )}
+      </nav>
+      <div className="title-row">
+        <div>
+          <h1>
+            {factory.name}
+            {factory.isSample && <span className="tag" title="This factory and its data are sample data">Sample</span>}
+          </h1>
+          <div className="muted small">
+            {factory.city}, {factory.state}, {factory.country} &middot; {factory.machineCount} machines &middot; {factory.shiftsPerDay} shifts per day
+          </div>
+        </div>
       </div>
-      <div className="muted small">
-        {factory.city}, {factory.state}, {factory.country} &middot; {factory.shiftsPerDay} shifts per day
-      </div>
-      <nav className="tabs" aria-label="Factory sections">
-        <NavLink to={`/factories/${factory.id}`} end>Machines</NavLink>
+      <Summary counts={factory.statusCounts} />
+      <nav className="tabs tabs-page" aria-label="Factory sections">
+        <NavLink to={`/factories/${factory.id}`} end className={({ isActive }) => (isActive || onMachine ? "active" : "")}>
+          Machines
+        </NavLink>
         {config.app.features.history && <NavLink to={`/factories/${factory.id}/history`}>History</NavLink>}
         <NavLink to={`/factories/${factory.id}/uploads`}>Uploads</NavLink>
       </nav>
-    </div>
+    </header>
   );
 }

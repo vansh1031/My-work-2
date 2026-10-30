@@ -7,7 +7,7 @@ import { useAdminFactories, useFactory, useInvalidateStatus } from "../../lib/qu
 import { ErrorNotice, Notice } from "../../components/Notice";
 import { Modal } from "../../components/Modal";
 import { FactoryPhoto } from "../../components/PhotoPlaceholder";
-import { MACHINE_TYPES } from "../../background/floor/MachineModels";
+import { MACHINE_TYPES } from "../../views/floor/MachineModels";
 
 function FactoryForm({ factory, onClose }: { factory: FactorySummary | null; onClose(): void }) {
   const { config } = useConfig();
