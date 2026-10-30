@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useConfig } from "../config/ConfigProvider";
+import { DATA_MODE, localBackendKind } from "../lib/api";
 import { getServerAddress } from "../lib/serverAddress";
 import { useSceneState } from "../state/SceneProvider";
 
@@ -40,7 +41,8 @@ export function DebugPanel() {
   return (
     <div className="debug" aria-label="Debug panel">
       <div><b>Version</b> {__APP_VERSION__}</div>
-      <div><b>Server</b> {getServerAddress() || window.location.origin}</div>
+      <div><b>Data mode</b> {DATA_MODE === "browser" ? `browser (built-in backend: ${localBackendKind()})` : "server"}</div>
+      {DATA_MODE === "server" && <div><b>Server</b> {getServerAddress() || window.location.origin}</div>}
       <div><b>Screen</b> {location.pathname}</div>
       <div><b>User</b> {user ? `${user.username} (${user.role}${user.canUpdateStatus ? ", can update" : ""})` : "not signed in"}</div>
       <div><b>Background</b> {scene.kind} {selected !== null ? `, selected #${selected}` : ""} {moving ? "(moving)" : ""}</div>

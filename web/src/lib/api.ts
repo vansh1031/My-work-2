@@ -13,8 +13,16 @@ export const DATA_MODE: "browser" | "server" = __DATA_MODE__;
 
 let localBackend: Promise<LocalBackend> | null = null;
 
+let localKind = "not started";
+
+/** Browser mode: how the built-in backend is running (debug panel). */
+export function localBackendKind(): string {
+  return localKind;
+}
+
 function startLocal(): Promise<LocalBackend> {
   localBackend ??= import("../local-backend").then((m) => m.startLocalBackend());
+  localBackend.then((b) => (localKind = b.kind), () => (localKind = "failed"));
   localBackend.catch(() => (localBackend = null));
   return localBackend;
 }
@@ -25,8 +33,9 @@ async function localRequest(method: string, path: string, body: unknown, isForm:
   try {
     backend = await startLocal();
   } catch (err) {
-    const reason = err instanceof Error ? err.message : String(err);
-    return Response.json({ error: { code: "LOCAL-001", message: `The built-in backend could not start in this browser. (${reason})` } }, { status: 503 });
+    const { startupFailure } = await import("../local-backend/backend-core");
+    const failure = startupFailure(err);
+    return Response.json(failure.body, { status: failure.status });
   }
   const input: DispatchInput = { method, url: path, token, body: isForm ? undefined : body, file: null };
   if (isForm) {

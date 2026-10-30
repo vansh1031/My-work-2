@@ -3,7 +3,8 @@
 import { validateConfig } from "../../../server/src/core/config/validate";
 
 const texts = import.meta.glob("../../../config/**/*.{json,md}", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
-const assets = import.meta.glob("../../../config/**/*.{svg,png,jpg,jpeg,ico}", { query: "?url", import: "default", eager: true }) as Record<string, string>;
+// Logo and favicon are built in as data: addresses, so reading them needs no download (see engine files in index.ts).
+const assets = import.meta.glob("../../../config/**/*.{svg,png,jpg,jpeg,ico}", { query: "?inline", import: "default", eager: true }) as Record<string, string>;
 
 const PREFIX = "../../../config/";
 const key = (relative: string) => PREFIX + relative.replace(/^\.?\//, "");
@@ -17,8 +18,10 @@ export function bundledConfig() {
 }
 
 export async function readBundledAsset(file: string): Promise<Uint8Array | null> {
-  const url = assets[key(file)];
-  if (!url) return null;
-  const res = await fetch(url);
-  return res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
+  const dataUrl = assets[key(file)];
+  if (!dataUrl) return null;
+  const comma = dataUrl.indexOf(",");
+  const payload = dataUrl.slice(comma + 1);
+  if (dataUrl.slice(0, comma).endsWith(";base64")) return Uint8Array.from(atob(payload), (c) => c.charCodeAt(0));
+  return new TextEncoder().encode(decodeURIComponent(payload));
 }

@@ -1,13 +1,15 @@
 # Builds the desktop installers on GitHub's Windows and Linux machines.
 # Start it from the Actions tab ("Run workflow"), or by pushing a tag like v0.2.0.
 # The installers appear as downloadable files on the finished run.
+# Without a server address the app is self-contained (browser mode: data kept on that computer).
+# With a server address it connects to that Factory Atlas server instead (server mode).
 name: Desktop installers
 
 on:
   workflow_dispatch:
     inputs:
       api_base_url:
-        description: "Server address built into the app (leave empty to use config/app.json)"
+        description: "Server address for server mode (leave empty for a self-contained app)"
         required: false
   push:
     tags: ["v*"]
@@ -38,8 +40,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev libssl-dev
       - run: npm ci
-      - name: Build web app
-        run: npm run build -w web
+      - name: Build web app (self-contained)
+        if: ${{ !inputs.api_base_url }}
+        run: npm run build -w web -- --mode browser
+      - name: Build web app (connects to a server)
+        if: ${{ inputs.api_base_url }}
+        run: npm run build -w web -- --mode server
         env:
           API_BASE_URL: ${{ inputs.api_base_url }}
       - name: Build installers

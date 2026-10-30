@@ -1,4 +1,5 @@
-# Runs on every push and pull request: typecheck, server tests, build, and the browser tests.
+# Runs on every push and pull request: typecheck, server tests (PostgreSQL and PGlite), build, and the browser
+# tests in both modes. The PostgreSQL service below is only needed for the server-mode tests.
 name: CI
 
 on:
