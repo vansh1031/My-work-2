@@ -1,4 +1,5 @@
 {
+  "dataMode": "browser",
   "apiBaseUrl": "http://localhost:4000",
   "allowServerAddressChange": true,
   "debug": false,

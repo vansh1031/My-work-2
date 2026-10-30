@@ -1,6 +1,6 @@
 // Database reads for factories, machines and status. Route handlers call these; nothing here checks permissions.
 import type { CurrentStatus, FactorySummary, Machine, MachineStatus, StatusCounts, StatusRecord } from "@fa/shared";
-import type { Db } from "../db/pool.js";
+import type { Db } from "../db.js";
 import { fileUrl } from "./files.js";
 
 interface FactoryRow {

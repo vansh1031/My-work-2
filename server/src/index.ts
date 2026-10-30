@@ -1,17 +1,13 @@
-// Entry point of the server. Order: read env -> load and check config -> connect and migrate database
-// -> optional sample data -> build routes -> listen. docs/flow.md walks through this in detail.
+// Entry point of the server (server mode). Order: read env -> load and check config -> connect, migrate,
+// create admin, optional sample data -> register routes -> listen. docs/flow.md walks through this in detail.
 import { readEnv } from "./env.js";
-import { bootstrap } from "./bootstrap.js";
+import { bootstrap } from "./node/bootstrap.js";
 import { buildApp } from "./app.js";
-import { seedSampleData } from "./scripts/sample-data.js";
 
 async function main() {
   const env = readEnv();
   const ctx = await bootstrap(env);
-  if (env.seedSampleData) {
-    const created = await seedSampleData(ctx.db);
-    if (created) console.log("Sample factories and machines were added (SEED_SAMPLE_DATA=true).");
-  }
+  if (ctx.sampleDataAdded) console.log("Sample factories and machines were added (SEED_SAMPLE_DATA=true).");
   const app = await buildApp(ctx, {
     logger: { level: env.logLevel, redact: ["req.headers.authorization"] },
   });

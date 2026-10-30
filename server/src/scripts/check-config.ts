@@ -1,7 +1,7 @@
 // Run with: npm run check-config
 // Checks every file in the config folder without starting the server, and prints what is wrong.
 import { readEnv } from "../env.js";
-import { loadConfig, ConfigError } from "../config/load.js";
+import { loadConfig, ConfigError } from "../node/load-config.js";
 
 const env = readEnv();
 try {

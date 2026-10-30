@@ -52,6 +52,7 @@ export interface PublicConfig {
     cards: { enterDurationMs: number; enterStaggerMs: number };
   };
   app: {
+    dataMode: "browser" | "server";
     apiBaseUrl: string;
     allowServerAddressChange: boolean;
     debug: boolean;

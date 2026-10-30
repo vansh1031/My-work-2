@@ -1,15 +1,17 @@
-import { readFileSync, existsSync } from "node:fs";
-import path from "node:path";
+// Checks every config file against the rules in schema.ts and collects every problem with its file and field.
+// Where the files come from is up to the caller: the server reads the config folder from disk
+// (server/src/node/load-config.ts); the browser version has them built in (web/src/local-backend/config.ts).
 import type { ZodType } from "zod";
 import type { PublicConfig } from "@fa/shared";
-import {
-  animationSchema,
-  appSchema,
-  brandingSchema,
-  excelSchema,
-  themeSchema,
-  type AppConfig,
-} from "./schema.js";
+import { animationSchema, appSchema, brandingSchema, excelSchema, themeSchema, type AppConfig } from "./schema.js";
+
+export interface ConfigSource {
+  /** Where the files are, for messages (a folder path, or "built into the app"). */
+  description: string;
+  /** Text of a file in the config folder, by relative path like "theme.json". null if missing. */
+  readText(relativePath: string): string | null;
+  exists(relativePath: string): boolean;
+}
 
 /** Thrown when a config file is missing or wrong. The message names the file and the field. */
 export class ConfigError extends Error {
@@ -20,15 +22,15 @@ export class ConfigError extends Error {
   }
 }
 
-function readJson<T>(dir: string, file: string, schema: ZodType<T>, problems: string[]): T | undefined {
-  const full = path.join(dir, file);
-  if (!existsSync(full)) {
-    problems.push(`${file}: file is missing (expected at ${full})`);
+function readJson<T>(source: ConfigSource, file: string, schema: ZodType<T>, problems: string[]): T | undefined {
+  const text = source.readText(file);
+  if (text === null) {
+    problems.push(`${file}: file is missing (expected in ${source.description})`);
     return undefined;
   }
   let raw: unknown;
   try {
-    raw = JSON.parse(readFileSync(full, "utf8"));
+    raw = JSON.parse(text);
   } catch (err) {
     problems.push(`${file}: not valid JSON (${(err as Error).message})`);
     return undefined;
@@ -44,26 +46,17 @@ function readJson<T>(dir: string, file: string, schema: ZodType<T>, problems: st
   return result.data;
 }
 
-function readText(dir: string, file: string, label: string, problems: string[]): string {
-  const full = path.join(dir, file);
-  if (!existsSync(full)) {
-    problems.push(`app.json -> ${label}: file "${file}" does not exist in the config folder`);
-    return "";
-  }
-  return readFileSync(full, "utf8");
-}
-
-export function loadConfig(dir: string): AppConfig {
+export function validateConfig(source: ConfigSource): AppConfig {
   const problems: string[] = [];
-  const branding = readJson(dir, "branding.json", brandingSchema, problems);
-  const theme = readJson(dir, "theme.json", themeSchema, problems);
-  const animation = readJson(dir, "animation.json", animationSchema, problems);
-  const excel = readJson(dir, "excel.json", excelSchema, problems);
-  const app = readJson(dir, "app.json", appSchema, problems);
+  const branding = readJson(source, "branding.json", brandingSchema, problems);
+  const theme = readJson(source, "theme.json", themeSchema, problems);
+  const animation = readJson(source, "animation.json", animationSchema, problems);
+  const excel = readJson(source, "excel.json", excelSchema, problems);
+  const app = readJson(source, "app.json", appSchema, problems);
 
   if (branding) {
     for (const key of ["logo", "favicon"] as const) {
-      if (!existsSync(path.join(dir, branding[key]))) {
+      if (!source.exists(branding[key])) {
         problems.push(`branding.json -> ${key}: file "${branding[key]}" does not exist in the config folder`);
       }
     }
@@ -93,16 +86,18 @@ export function loadConfig(dir: string): AppConfig {
 
   let legal = { privacyPolicy: "", terms: "" };
   if (app) {
-    legal = {
-      privacyPolicy: readText(dir, app.legal.privacyPolicy, "legal.privacyPolicy", problems),
-      terms: readText(dir, app.legal.terms, "legal.terms", problems),
+    const read = (file: string, label: string) => {
+      const text = source.readText(file);
+      if (text === null) problems.push(`app.json -> ${label}: file "${file}" does not exist in the config folder`);
+      return text ?? "";
     };
+    legal = { privacyPolicy: read(app.legal.privacyPolicy, "legal.privacyPolicy"), terms: read(app.legal.terms, "legal.terms") };
   }
 
   if (problems.length || !branding || !theme || !animation || !excel || !app) {
     throw new ConfigError(problems);
   }
-  return { dir, branding, theme, animation, excel, app, legal };
+  return { source: source.description, branding, theme, animation, excel, app, legal };
 }
 
 /** The part of the config the app is allowed to see before anyone signs in. */

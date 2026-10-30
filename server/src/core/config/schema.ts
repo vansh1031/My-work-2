@@ -119,6 +119,7 @@ export const excelSchema = z.object({
 });
 
 export const appSchema = z.object({
+  dataMode: z.enum(["browser", "server"]),
   apiBaseUrl: z.string().min(1),
   allowServerAddressChange: z.boolean(),
   debug: z.boolean(),
@@ -156,7 +157,8 @@ export type ExcelConfig = z.infer<typeof excelSchema>;
 export type AppSettingsConfig = z.infer<typeof appSchema>;
 
 export interface AppConfig {
-  dir: string;
+  /** Where the config came from (folder path, or "built into the app"). */
+  source: string;
   branding: BrandingConfig;
   theme: ThemeConfig;
   animation: AnimationConfig;

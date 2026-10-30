@@ -1,38 +1,29 @@
-// Checks run before route handlers. Each throws an AppError with a code from errors.ts when access is denied.
-import type { FastifyRequest } from "fastify";
+// Checks run at the start of route handlers. Each throws an AppError with a code from errors.ts when access is denied.
 import type { SessionUser } from "@fa/shared";
-import type { Db } from "../db/pool.js";
+import type { Queryable } from "../db.js";
 import { AppError } from "../errors.js";
+import type { ApiRequest } from "../http.js";
 import { resolveSession } from "./sessions.js";
 
-declare module "fastify" {
-  interface FastifyRequest {
-    user: SessionUser | null;
-    sessionToken: string | null;
-  }
+/** Finds the signed-in user for a token from the "Authorization: Bearer" header. */
+export async function userForToken(db: Queryable, token: string | null, idleMinutes: number): Promise<SessionUser | null> {
+  return token ? resolveSession(db, token, idleMinutes) : null;
 }
 
-export function bearerToken(request: FastifyRequest): string | null {
-  const header = request.headers.authorization;
+export function tokenFromHeader(header: string | undefined): string | null {
   if (!header?.startsWith("Bearer ")) return null;
   return header.slice("Bearer ".length).trim() || null;
 }
 
-export async function loadUser(request: FastifyRequest, db: Db, idleMinutes: number): Promise<void> {
-  const token = bearerToken(request);
-  request.sessionToken = token;
-  request.user = token ? await resolveSession(db, token, idleMinutes) : null;
-}
-
 /** Signed in and, unless allowPasswordChange is set, past the forced first-login password change. */
-export function requireUser(request: FastifyRequest, opts: { allowPasswordChange?: boolean } = {}): SessionUser {
+export function requireUser(request: ApiRequest, opts: { allowPasswordChange?: boolean } = {}): SessionUser {
   const user = request.user;
   if (!user) throw new AppError("AUTH-002");
   if (user.mustChangePassword && !opts.allowPasswordChange) throw new AppError("AUTH-005");
   return user;
 }
 
-export function requireAdmin(request: FastifyRequest): SessionUser {
+export function requireAdmin(request: ApiRequest): SessionUser {
   const user = requireUser(request);
   if (user.role !== "admin") throw new AppError("PERM-001");
   return user;
@@ -43,7 +34,7 @@ export function requireStatusPermission(user: SessionUser): void {
 }
 
 /** Admins can open every factory. Other users only the ones assigned to them. */
-export async function assertFactoryAccess(db: Db, user: SessionUser, factoryId: number): Promise<void> {
+export async function assertFactoryAccess(db: Queryable, user: SessionUser, factoryId: number): Promise<void> {
   const { rows } = await db.query<{ ok: boolean }>(
     `SELECT EXISTS (
        SELECT 1 FROM factories f

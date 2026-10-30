@@ -1,24 +1,22 @@
 // Sign-in sessions. The app receives a random token and sends it back on every request
 // ("Authorization: Bearer <token>"). A session ends after `sessionIdleMinutes` (config/app.json) without use.
-import { createHash, randomBytes } from "node:crypto";
 import type { SessionUser } from "@fa/shared";
-import type { Db } from "../db/pool.js";
+import type { Queryable } from "../db.js";
+import { randomToken, sha256Hex } from "../platform.js";
 
-function hashToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
-}
+const hashToken = sha256Hex;
 
-export async function createSession(db: Db, userId: number): Promise<string> {
-  const token = randomBytes(32).toString("base64url");
-  await db.query("INSERT INTO sessions (token_hash, user_id) VALUES ($1, $2)", [hashToken(token), userId]);
+export async function createSession(db: Queryable, userId: number): Promise<string> {
+  const token = randomToken(32);
+  await db.query("INSERT INTO sessions (token_hash, user_id) VALUES ($1, $2)", [await hashToken(token), userId]);
   return token;
 }
 
-export async function endSession(db: Db, token: string): Promise<void> {
-  await db.query("DELETE FROM sessions WHERE token_hash = $1", [hashToken(token)]);
+export async function endSession(db: Queryable, token: string): Promise<void> {
+  await db.query("DELETE FROM sessions WHERE token_hash = $1", [await hashToken(token)]);
 }
 
-export async function endAllSessionsForUser(db: Db, userId: number): Promise<void> {
+export async function endAllSessionsForUser(db: Queryable, userId: number): Promise<void> {
   await db.query("DELETE FROM sessions WHERE user_id = $1", [userId]);
 }
 
@@ -44,8 +42,8 @@ export function toSessionUser(row: UserRow): SessionUser {
 }
 
 /** Returns the signed-in user for a token, or null if the token is unknown, idle too long, or the user is inactive. */
-export async function resolveSession(db: Db, token: string, idleMinutes: number): Promise<SessionUser | null> {
-  const tokenHash = hashToken(token);
+export async function resolveSession(db: Queryable, token: string, idleMinutes: number): Promise<SessionUser | null> {
+  const tokenHash = await hashToken(token);
   const { rows } = await db.query<UserRow & { session_id: number }>(
     `UPDATE sessions s SET last_seen_at = now()
      FROM users u

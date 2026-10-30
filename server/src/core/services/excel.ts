@@ -38,7 +38,7 @@ function cellValue(value: ExcelJS.CellValue): unknown {
   return String(value);
 }
 
-export async function readWorkbook(buffer: Buffer, config: ExcelConfig): Promise<WorkbookReadResult> {
+export async function readWorkbook(buffer: Uint8Array, config: ExcelConfig): Promise<WorkbookReadResult> {
   const workbook = new ExcelJS.Workbook();
   try {
     await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
@@ -291,7 +291,7 @@ export async function buildTemplate(
   shiftsPerDay: number,
   machines: { code: string; name: string }[],
   workDate: string,
-): Promise<Buffer> {
+): Promise<Uint8Array> {
   const workbook = new ExcelJS.Workbook();
   const sheetName = config.sheet || "Daily status";
   const sheet = workbook.addWorksheet(sheetName);
@@ -335,5 +335,5 @@ export async function buildTemplate(
   help.addRow(["Date formats", config.dateFormats.join(", ")]);
   help.columns.forEach((col) => (col.width = 30));
 
-  return Buffer.from(await workbook.xlsx.writeBuffer());
+  return new Uint8Array(await workbook.xlsx.writeBuffer());
 }

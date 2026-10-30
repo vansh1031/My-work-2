@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../.env src/index.ts",
     "start": "node dist/index.js",
-    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/index.js --packages=external --alias:@fa/shared=../shared/src/index.ts && rm -rf dist/migrations && cp -r src/db/migrations dist/migrations",
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/index.js --packages=external --alias:@fa/shared=../shared/src/index.ts && rm -rf dist/migrations && cp -r src/core/migrations dist/migrations",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "check-config": "tsx src/scripts/check-config.ts",
@@ -24,6 +24,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.13",
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "esbuild": "^0.28.2",

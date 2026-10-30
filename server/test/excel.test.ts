@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import ExcelJS from "exceljs";
-import { loadConfig } from "../src/config/load.js";
-import { buildTemplate, parseDate, readWorkbook, validateRows, type ValidationContext } from "../src/services/excel.js";
+import { loadConfig } from "../src/node/load-config.js";
+import { buildTemplate, parseDate, readWorkbook, validateRows, type ValidationContext } from "../src/core/services/excel.js";
 import { CONFIG_DIR, HEADER, makeSheet } from "./helpers.js";
 
 const config = loadConfig(CONFIG_DIR).excel;

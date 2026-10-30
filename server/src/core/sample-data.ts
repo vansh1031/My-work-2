@@ -1,10 +1,9 @@
 // Sample factories, machines, users and 14 days of statuses, so a fresh install has something to show.
 // Everything here is marked as sample (factories.is_sample = TRUE) and the app labels it "Sample data".
 // Runs only when SEED_SAMPLE_DATA=true and the database has no factories yet.
-import { randomBytes } from "node:crypto";
-import type { Db } from "../db/pool.js";
-import { withTransaction } from "../db/pool.js";
-import { hashPassword } from "../auth/passwords.js";
+import type { Db } from "./db.js";
+import { hashPassword } from "./auth/passwords.js";
+import { randomHex } from "./platform.js";
 
 const FACTORIES = [
   { name: "Indore Plant", city: "Indore", state: "Madhya Pradesh", country: "India", latitude: 22.7196, longitude: 75.8577 },
@@ -45,12 +44,12 @@ export async function seedSampleData(db: Db): Promise<boolean> {
   if (existing.rowCount) return false;
 
   const samplePassword = await hashPassword("sample-pass-1");
-  await withTransaction(db, async (client) => {
+  await db.transaction(async (client) => {
     const sampleUser = await client.query<{ id: number }>(
       `INSERT INTO users (username, display_name, password_hash, role, active, must_change_password)
        VALUES ('sample-data', 'Sample data', $1, 'user', FALSE, FALSE)
        ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username RETURNING id`,
-      [await hashPassword(randomBytes(24).toString("hex"))],
+      [await hashPassword(randomHex(24))],
     );
     const authorId = sampleUser.rows[0]!.id;
 
@@ -73,6 +72,9 @@ export async function seedSampleData(db: Db): Promise<boolean> {
           [factoryId, m.code, m.name, m.machineType, m.description],
         );
         const machineId = rows[0]!.id;
+        // One insert per machine with all its days and shifts (much faster than one insert per row).
+        const values: string[] = [];
+        const params: unknown[] = [machineId, authorId];
         for (let daysAgo = 14; daysAgo >= 1; daysAgo--) {
           const d = new Date(today);
           d.setDate(d.getDate() - daysAgo);
@@ -80,13 +82,16 @@ export async function seedSampleData(db: Db): Promise<boolean> {
           for (const shift of [1, 2]) {
             const status = pickStatus(rand());
             const aborts = status === "aborted" ? 1 + Math.floor(rand() * 3) : 0;
-            await client.query(
-              `INSERT INTO status_records (machine_id, work_date, shift, status, abort_count, remarks, source, created_by)
-               VALUES ($1, $2, $3, $4, $5, 'Sample data', 'manual', $6)`,
-              [machineId, workDate, shift, status, aborts, authorId],
-            );
+            const n = params.length;
+            params.push(workDate, shift, status, aborts);
+            values.push(`($1, $${n + 1}::date, $${n + 2}::int, $${n + 3}, $${n + 4}::int, 'Sample data', 'manual', $2)`);
           }
         }
+        await client.query(
+          `INSERT INTO status_records (machine_id, work_date, shift, status, abort_count, remarks, source, created_by)
+           VALUES ${values.join(", ")}`,
+          params,
+        );
       }
     }
 

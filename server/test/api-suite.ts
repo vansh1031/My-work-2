@@ -1,40 +1,40 @@
 // End-to-end checks of the server: sign-in rules, who can see what, and the full Excel upload flow.
+// Runs once per engine (api.postgres.test.ts, api.pglite.test.ts), so server mode and browser mode are held
+// to exactly the same behaviour.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { adminToken, auth, HEADER, login, makeSheet, multipartFile, setupApp } from "./helpers.js";
-import { todayIso } from "../src/routes/factories.js";
+import { adminToken, HEADER, login, makeSheet, setupClient, XLSX, type Engine, type TestClient } from "./helpers.js";
+import { todayIso } from "../src/core/routes/factories.js";
 
-let s: Awaited<ReturnType<typeof setupApp>>;
+export function runApiSuite(engine: Engine) {
+let client: TestClient;
 let admin: string;
 let indoreId: number;
 let puneId: number;
-let machineIds: number[] = [];
+const machineIds: number[] = [];
 const day = "2026-10-12";
 
 beforeAll(async () => {
-  s = await setupApp();
+  client = await setupClient(engine);
 });
 afterAll(async () => {
-  await s.app.close();
-  await s.db.end();
+  await client.close();
 });
 
-const get = (url: string, token?: string) => s.app.inject({ method: "GET", url, headers: token ? auth(token) : {} });
-const send = (method: "POST" | "PATCH" | "PUT" | "DELETE", url: string, token: string, payload?: object) =>
-  s.app.inject({ method, url, headers: auth(token), payload });
-const upload = async (url: string, token: string, rows: unknown[][], name = "day.xlsx") => {
-  const mp = multipartFile(name, await makeSheet(HEADER, rows));
-  return s.app.inject({ method: "POST", url, headers: { ...auth(token), ...mp.headers }, payload: mp.payload });
-};
+const get = (url: string, token?: string) => client.request("GET", url, { token });
+const send = (method: "POST" | "PATCH" | "PUT" | "DELETE", url: string, token: string, body?: object) =>
+  client.request(method, url, { token, body });
+const upload = async (url: string, token: string, rows: unknown[][], name = "day.xlsx") =>
+  client.request("POST", url, { token, file: { fileName: name, mimeType: XLSX, data: await makeSheet(HEADER, rows) } });
 
 describe("sign-in", () => {
   it("rejects a wrong password with AUTH-001", async () => {
-    const res = await s.app.inject({ method: "POST", url: "/api/auth/login", payload: { username: "admin", password: "nope" } });
+    const res = await client.request("POST", "/api/auth/login", { body: { username: "admin", password: "nope" } });
     expect(res.statusCode).toBe(401);
     expect(res.json().error.code).toBe("AUTH-001");
   });
 
   it("forces a password change on first sign-in", async () => {
-    const token = await login(s.app, "admin", "first-password");
+    const token = await login(client, "admin", "first-password");
     const me = await get("/api/auth/me", token);
     expect(me.json().user.mustChangePassword).toBe(true);
     const blocked = await get("/api/factories", token);
@@ -42,8 +42,8 @@ describe("sign-in", () => {
   });
 
   it("after changing the password, old sessions stop working", async () => {
-    const old = await login(s.app, "admin", "first-password");
-    admin = await adminToken(s.app);
+    const old = await login(client, "admin", "first-password");
+    admin = await adminToken(client);
     expect((await get("/api/factories", admin)).statusCode).toBe(200);
     expect((await get("/api/auth/me", old)).json().error.code).toBe("AUTH-002");
   });
@@ -97,7 +97,7 @@ describe("admin setup", () => {
 });
 
 async function firstLogin(username: string, password: string) {
-  const t = await login(s.app, username, password);
+  const t = await login(client, username, password);
   const res = await send("POST", "/api/auth/change-password", t, { currentPassword: password, newPassword: `${password}-new` });
   return res.json().token as string;
 }
@@ -107,7 +107,7 @@ let sup: string;
 
 describe("factory access", () => {
   it("users see only their assigned factories", async () => {
-    viewer = await login(s.app, "viewer", "viewer-pass-1-new");
+    viewer = await login(client, "viewer", "viewer-pass-1-new");
     sup = await firstLogin("sup", "sup-pass-1");
     const list = (await get("/api/factories", viewer)).json().factories;
     expect(list.map((f: { id: number }) => f.id)).toEqual([indoreId]);
@@ -150,8 +150,10 @@ describe("Excel upload", () => {
   });
 
   it("only .xlsx files are accepted", async () => {
-    const mp = multipartFile("day.csv", Buffer.from("a,b"), "text/csv");
-    const res = await s.app.inject({ method: "POST", url: `/api/factories/${indoreId}/uploads/preview`, headers: { ...auth(sup), ...mp.headers }, payload: mp.payload });
+    const res = await client.request("POST", `/api/factories/${indoreId}/uploads/preview`, {
+      token: sup,
+      file: { fileName: "day.csv", mimeType: "text/csv", data: new TextEncoder().encode("a,b") },
+    });
     expect(res.json().error.code).toBe("FILE-003");
   });
 
@@ -193,7 +195,7 @@ describe("Excel upload", () => {
     const uploads = (await get(`/api/factories/${indoreId}/uploads`, viewer)).json().uploads;
     const res = await get(`/api/uploads/${uploads[1].id}/file`, viewer);
     expect(res.statusCode).toBe(200);
-    expect(res.rawPayload.subarray(0, 2).toString()).toBe("PK");
+    expect(new TextDecoder().decode(res.rawPayload.subarray(0, 2))).toBe("PK");
   });
 
   it("the template download is a real workbook", async () => {
@@ -226,7 +228,7 @@ describe("account control", () => {
     const v = users.find((u: { username: string }) => u.username === "viewer");
     await send("PATCH", `/api/admin/users/${v.id}`, admin, { active: false });
     expect((await get("/api/factories", viewer)).json().error.code).toBe("AUTH-002");
-    const res = await s.app.inject({ method: "POST", url: "/api/auth/login", payload: { username: "viewer", password: "viewer-pass-1-new" } });
+    const res = await client.request("POST", "/api/auth/login", { body: { username: "viewer", password: "viewer-pass-1-new" } });
     expect(res.json().error.code).toBe("AUTH-003");
   });
 
@@ -256,3 +258,4 @@ describe("system", () => {
     expect((await get("/api/nope")).json().error.code).toBe("REQ-002");
   });
 });
+}

@@ -1,21 +1,35 @@
-// Builds the web server: plugins, the sign-in check that runs before every request, routes, and error handling.
+// Server mode: serves the routes from core/router.ts over HTTP with Fastify, plus the built web app.
+// Adds what only a real server needs: CORS, rate limiting, reading uploaded files from multipart requests.
 // Tests call buildApp directly; index.ts calls it and then starts listening.
 import { existsSync } from "node:fs";
-import Fastify from "fastify";
+import Fastify, { type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
-import type { AppContext } from "./context.js";
-import { AppError, ERROR_CATALOG } from "./errors.js";
-import { loadUser } from "./auth/guard.js";
-import { adminRoutes } from "./routes/admin.js";
-import { authRoutes } from "./routes/auth.js";
-import { factoryRoutes } from "./routes/factories.js";
-import { systemRoutes } from "./routes/system.js";
-import { uploadRoutes } from "./routes/uploads.js";
+import type { SessionUser } from "@fa/shared";
+import { AppError, ERROR_CATALOG } from "./core/errors.js";
+import { BinaryResponse, type Route, type UploadedFile } from "./core/http.js";
+import { tokenFromHeader, userForToken } from "./core/auth/guard.js";
+import { allRoutes } from "./core/router.js";
+import type { NodeContext } from "./node/bootstrap.js";
 
-export async function buildApp(ctx: AppContext, opts: { logger?: boolean | object } = {}) {
+declare module "fastify" {
+  interface FastifyRequest {
+    user: SessionUser | null;
+    sessionToken: string | null;
+  }
+}
+
+async function readFile(req: FastifyRequest, route: Route, ctx: NodeContext): Promise<UploadedFile | null> {
+  if (!route.fileLimitBytes || !req.isMultipart()) return null;
+  const file = await req.file({ limits: { fileSize: route.fileLimitBytes(ctx), files: 1 } });
+  if (!file) return null;
+  const data = await file.toBuffer();
+  return { fileName: file.filename, mimeType: file.mimetype, data, truncated: file.file.truncated };
+}
+
+export async function buildApp(ctx: NodeContext, opts: { logger?: boolean | object } = {}) {
   const app = Fastify({ logger: opts.logger ?? false, bodyLimit: 1024 * 1024 });
 
   await app.register(cors, {
@@ -28,7 +42,9 @@ export async function buildApp(ctx: AppContext, opts: { logger?: boolean | objec
   app.decorateRequest("user", null);
   app.decorateRequest("sessionToken", null);
   app.addHook("onRequest", async (req) => {
-    if (req.url.startsWith("/api/")) await loadUser(req, ctx.db, ctx.config.app.sessionIdleMinutes);
+    if (!req.url.startsWith("/api/")) return;
+    req.sessionToken = tokenFromHeader(req.headers.authorization);
+    req.user = await userForToken(ctx.db, req.sessionToken, ctx.config.app.sessionIdleMinutes);
   });
   app.addHook("onSend", async (_req, reply) => {
     reply.header("X-Content-Type-Options", "nosniff");
@@ -64,11 +80,36 @@ export async function buildApp(ctx: AppContext, opts: { logger?: boolean | objec
     return reply.sendFile("index.html");
   });
 
-  await systemRoutes(app, ctx);
-  await authRoutes(app, ctx);
-  await factoryRoutes(app, ctx);
-  await uploadRoutes(app, ctx);
-  await adminRoutes(app, ctx);
+  for (const route of allRoutes) {
+    app.route({
+      method: route.method,
+      url: route.path,
+      config: route.rateLimitPerMinute ? { rateLimit: { max: route.rateLimitPerMinute, timeWindow: "1 minute" } } : {},
+      handler: async (req, reply) => {
+        const file = await readFile(req, route, ctx);
+        const result = await route.handler(
+          {
+            params: req.params as Record<string, string>,
+            query: req.query as Record<string, string>,
+            body: req.body ?? {},
+            user: req.user,
+            sessionToken: req.sessionToken,
+            file,
+          },
+          ctx,
+        );
+        if (result instanceof BinaryResponse) {
+          reply.header("Content-Type", result.contentType);
+          if (result.cacheControl) reply.header("Cache-Control", result.cacheControl);
+          if (result.downloadName) {
+            reply.header("Content-Disposition", `attachment; filename="${result.downloadName.replace(/["\\\r\n]/g, "_")}"`);
+          }
+          return reply.send(Buffer.from(result.data.buffer, result.data.byteOffset, result.data.byteLength));
+        }
+        return result;
+      },
+    });
+  }
 
   // The same server also serves the web version of the app (useful for TV screens and browsers).
   if (existsSync(ctx.env.webDistDir)) {

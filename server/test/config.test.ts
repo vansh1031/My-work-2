@@ -2,7 +2,7 @@ import { cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { ConfigError, loadConfig } from "../src/config/load.js";
+import { ConfigError, loadConfig } from "../src/node/load-config.js";
 import { CONFIG_DIR } from "./helpers.js";
 
 function copyConfig() {
