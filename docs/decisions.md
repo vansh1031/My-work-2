@@ -112,15 +112,53 @@ Format: **What** / **Why** / **Trade-off accepted**.
 ### D-025 An admin cannot deactivate themselves or remove their own admin role
 - **Why:** prevents locking everyone out by accident.
 
-### D-026 Docker image copies installed packages from the build step
+### D-026 Docker image copies installed packages from the build step (replaced by D-034)
 - **What:** the image runs `npm ci` once, builds, runs `npm prune --omit=dev`, and copies `node_modules` into the final image.
 - **Why:** `npm ci --workspace server` crashed with an npm internal error. This way is simple and reliable.
 - **Trade-off:** the image is larger (about 700 MB) because it also contains the web app's packages.
 
-### D-027 Config is read once at server start
+### D-027 Config is read once at server start (browser mode: built into the app, see D-035)
 - **Why:** simple and predictable; a broken file stops the server with a clear message instead of failing halfway through the day.
 - **Trade-off:** after editing config, restart the server (`docker compose restart app`).
 
 ### D-028 Placeholder drawings instead of generated factory photos
 - **What:** cards show a "Photo pending" drawing; the admin uploads photos per factory.
 - **Why:** the owner was fine with AI photos for now, but generating images is not possible from the build environment, and a clear placeholder is more honest than a stock image. Real photos can be uploaded at any time from Admin.
+
+### D-029 Browser mode: the whole app, including its database, runs in the browser
+- **What:** a new data mode (`config/app.json` `dataMode: "browser"`, now the default). The backend runs inside the app on PGlite, which is PostgreSQL compiled to WebAssembly, with data kept in the browser's IndexedDB storage. The app is published as a website with GitHub Pages and also packaged in the desktop installer.
+- **Why:** the owner asked to run the app without installing anything for now, with no change to features or screens. A browser page is the only thing that needs no installation. Using real PostgreSQL in the browser means the same SQL runs in both modes, so nothing had to be rewritten.
+- **Trade-off:** in browser mode data stays in one browser on one computer; users on different computers do not share data. Sharing needs server mode. The first visit downloads about 4 MB (compressed) for the database engine, cached afterwards. The first start takes a few seconds to create the database.
+
+### D-030 One backend code base for both modes
+- **What:** routes, services, checks and SQL moved to `server/src/core`, with no Node or Fastify imports. A route is a plain `{ method, path, handler }`. Server mode registers the list with Fastify (`server/src/app.ts`); browser mode calls `dispatch()` (`server/src/core/router.ts`). The database is an interface (`core/db.ts`) with two adapters: node-postgres and PGlite.
+- **Why:** two separate backends would drift apart. Now one change fixes both, and the API test suite runs against both engines (`server/test/api.postgres.test.ts`, `api.pglite.test.ts`).
+- **Trade-off:** core code may only use what both Node and browsers have (Web Crypto instead of Node's crypto, Uint8Array instead of Buffer).
+
+### D-031 The built-in backend runs in a background worker, preferably shared by all tabs
+- **What:** `web/src/local-backend` starts the backend as a SharedWorker. If that cannot start, a normal Worker; if that fails too, inside the page (`index.ts` tries them in order and logs `LOCAL-003` for each failure).
+- **Why:** password checks are slow on purpose and the 3D views need the page's time; on the page itself a password change took 25 seconds on a slow machine, in a worker 2. A SharedWorker gives all tabs one database. The page fallback exists because some desktop windows (WebKit on Linux) refuse browser storage inside workers.
+- **Trade-off:** with a normal Worker or in the page, only one tab at a time can use the data (`LOCAL-002` in the others).
+
+### D-032 The page downloads the database engine files and hands them to the worker
+- **What:** `pglite.wasm`, `initdb.wasm` and `pglite.data` are fetched by the page and sent to the worker as bytes. The logo and favicon are built in as data addresses.
+- **Why:** in the Linux desktop window a worker cannot download anything (the `tauri://` address), and WebKit cannot read a downloaded Blob inside a worker.
+
+### D-033 Browser storage written block by block, every change saved before answering
+- **What:** `web/src/local-backend/idb-storage.ts` stores PGlite's files in IndexedDB as 64 KB blocks, through PGlite's change-tracking file system (`memfs-frontend`). Each query saves only the blocks it changed, and the answer comes back after the save is complete.
+- **Why:** PGlite's built-in `idb://` storage rewrites its whole folder after each query. That was too slow (23 seconds to add sample data), and its fast "relaxed" option saved in the background where a race (error `ErrnoError` 44, file not found) silently lost changes. Tested: data survives closing and reopening (`server/test/browser-storage.test.ts`, and a browser check).
+- **Trade-off:** our own storage code to maintain (about 150 lines). The database files are loaded into memory at start, as with PGlite's own storage.
+
+### D-034 Docker removed
+- **What:** `Dockerfile`, `docker-compose.yml` and `.dockerignore` deleted at the owner's request.
+- **Why:** browser mode needs no server; server mode can run with Node and PostgreSQL directly (`SETUP.md` Part C4). Docker can be added back for server deployments later.
+
+### D-035 Browser mode builds the config into the app
+- **What:** in browser mode the `config/` files are copied into the app when it is built and checked at startup with the same rules as on a server.
+- **Why:** there is no server to read them from.
+- **Trade-off:** after changing config, rebuild the app (pushing to `main` rebuilds the website automatically). Run `npm run check-config` before building.
+
+### D-036 Desktop installers: self-contained by default
+- **What:** the Desktop installers workflow builds browser mode unless a server address is typed, then server mode. The desktop window allows WebAssembly (`'wasm-unsafe-eval'` in its content security policy), which the built-in database needs.
+- **Trade-off:** desktop data stays on that computer, as in the browser.
+

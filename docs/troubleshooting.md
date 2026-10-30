@@ -4,16 +4,20 @@ Find the problem without opening the code. Start with section 1, then look up an
 
 ## 1. First three checks
 1. **System status page.** In the app footer, "System status" (works without signing in). It shows whether the server, database, config, 3D graphics and online map are OK.
-2. **Server log.** `docker compose logs -f app` (or the terminal running `npm run dev`). Every line is JSON; look for `"level":50` (error) and an error code.
+2. **Logs.** Browser mode: the browser's developer tools (F12), tab "Console"; look for lines starting with an error code such as `[LOCAL-001]`. Server mode: the terminal running the server; every line is JSON, look for `"level":50` (error) and an error code.
 3. **Debug panel.** Set `"debug": true` in `config/app.json`, restart the server, reopen the app. The panel in the corner shows the server address, signed-in user, current screen, background state, frames per second and the last errors.
 
 ## 2. Common problems
 
 | What you see | Likely cause | What to do |
 |---|---|---|
-| "Cannot connect" screen when the app starts (`NET-001`) | Server not running, or the app points to the wrong address | Start the server (`docker compose up -d`). Check the address under "Connection settings" on the login screen, or `apiBaseUrl` in `config/app.json` before building the desktop app. |
-| Server stops right after starting with `CONFIG-001` | A config file has a mistake | The log lists each file, field and problem. Fix and restart. `npm run check-config` checks without starting. |
-| Server stops with `DB-001` | Database not reachable | `docker compose ps`: is `db` healthy? Check `DATABASE_URL`. |
+| "Cannot start" screen (`LOCAL-001`) | Browser mode: the built-in database could not start. Usually private browsing, blocked site data ("cookies and site data" switched off), or a very old browser. | Use a normal window of a current Chrome, Edge or Firefox; allow site data for this address. The message after the code says what failed. |
+| "Cannot start" screen (`LOCAL-002`) | Browser mode: the app is open in another tab, and this browser cannot share one database between tabs | Close the other tab, or use it there. |
+| Warning `LOCAL-003` in the console | Browser mode: one way of running the built-in backend did not work, the next one was tried | Nothing to do if the app works. The debug panel shows which way is in use. |
+| All data is gone in browser mode | Site data was cleared, or a different browser, computer or private window is used | Browser mode keeps data in one browser on one computer. For shared or backed-up data use server mode. |
+| "Cannot connect" screen when the app starts (`NET-001`) | Server mode: server not running, or the app points to the wrong address | Start the server. Check the address under "Connection settings" on the login screen, or `apiBaseUrl` in `config/app.json` before building the desktop app. |
+| `CONFIG-001` ("Cannot start" in browser mode, or the server stops) | A config file has a mistake | The message lists each file, field and problem. Fix, then rebuild (browser mode) or restart (server mode). `npm run check-config` checks without starting. |
+| Server stops with `DB-001` | Server mode: database not reachable | Is PostgreSQL running? Check `DATABASE_URL` in `.env`. |
 | Globe area is plain dark, no globe | WebGL not available, or `features.globe` is off | System status, "3D graphics (WebGL)". Update the graphics driver, or keep it off; the app works without it. |
 | Globe shows but no streets or city names | Online map not reachable, built-in globe in use (this is normal offline) | System status, "Online map tiles". Check internet access or `map.tileStyleUrl`. |
 | Globe does not highlight the state | State or country name does not match the boundary data | Use the usual English name: "Madhya Pradesh", "India", "Baden-Württemberg". The debug panel shows `stateFound: false`. |
@@ -26,7 +30,7 @@ Find the problem without opening the code. Start with section 1, then look up an
 | User is signed out often | `sessionIdleMinutes` is short, or they close the app (closing always signs out) | Raise `sessionIdleMinutes` in `app.json`. |
 | Upload preview lists problems | The sheet does not match the rules | See the XL codes below. Fix the file and choose it again. |
 | A machine shows the wrong status after an upload | A manual edit or another upload is newer | Machine page, the shift table says who changed it and when. History tab shows every day. Uploads tab shows which file is active. |
-| Changing a config file has no effect | Server not restarted | `docker compose restart app`. Desktop app settings (`apiBaseUrl`) need a new build. |
+| Changing a config file has no effect | Browser mode: the app was not rebuilt. Server mode: the server was not restarted. | Rebuild (`npm run build`, or push to `main` for the website), or restart the server. |
 | Port 4000 already in use | Another program uses it | Set `PORT=4300` in `.env` and use `http://localhost:4300`. |
 
 ## 3. Error codes
@@ -81,7 +85,10 @@ Find the problem without opening the code. Start with section 1, then look up an
 ### App (shown in the app or the debug panel)
 | Code | Meaning | Fix |
 |---|---|---|
-| NET-001 | Server cannot be reached | Network, server running, server address. |
+| NET-001 | Server mode: server cannot be reached | Network, server running, server address. |
+| LOCAL-001 | Browser mode: built-in database could not start | See section 2. |
+| LOCAL-002 | Browser mode: app already open in another tab that holds the data | Close the other tab. |
+| LOCAL-003 | Browser mode: one way of starting the backend failed, the next is tried (warning only) | Nothing, unless LOCAL-001 follows. |
 | HTTP-nnn | Server answered without an error code | Usually a proxy or wrong address in between. Check the address. |
 | APP-001 | Unexpected error in the app | Note what you did; check the debug panel's recent errors. |
 | BG-001 | Background (globe or floor) could not be drawn | The app continues with a plain background. See WebGL above. |
@@ -92,11 +99,10 @@ Find the problem without opening the code. Start with section 1, then look up an
 ## 4. Useful commands
 | Command | What it does |
 |---|---|
-| `docker compose ps` | Is everything running and healthy? |
-| `docker compose logs -f app` | Live server log |
-| `docker compose restart app` | Apply config changes |
-| `docker compose down` | Stop (data kept) |
-| `docker compose down -v` | Stop and **delete all data** (database, photos). Only for a fresh start. |
-| `npm run check-config` | Check config files without starting |
-| `npm test` | Server tests |
-| `npm run test:e2e` | Click-through tests of the whole app |
+| `npm run check-config` | Check config files without starting anything |
+| `npm run dev` | Run the app with live reload (browser mode) |
+| `npm test` | Backend tests (PGlite, and PostgreSQL if available) |
+| `npm run test:e2e` | Click-through tests of the whole app, both modes |
+| `node server/dist/index.js` | Start the server (server mode, after `npm run build`) |
+
+To start completely fresh in browser mode: in the browser, delete the site data for the app's address (Chrome: the lock icon next to the address, "Site settings", "Delete data"). This deletes all factories, users and uploads in that browser.

@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.2.0 (2026-10-30)
+Browser mode: the app runs without installing anything.
+
+### Added
+- Browser mode (default): the whole app, including its database, runs in the browser or desktop window. Data is kept in that browser on that computer. Uses PGlite, PostgreSQL compiled to WebAssembly, with every change saved to IndexedDB.
+- Website: GitHub Pages workflow publishes the browser version on every push to `main`.
+- The backend code now lives in `server/src/core` and runs unchanged in both modes; the API test suite runs on PostgreSQL and on PGlite.
+- Browser tests run in both modes; new test for factory photo upload; new test that browser storage keeps data after closing.
+- Error codes LOCAL-001, LOCAL-002, LOCAL-003. Debug panel shows the data mode and how the built-in backend runs.
+- "Starting" indicator while the app starts.
+
+### Changed
+- Desktop installers are self-contained unless a server address is given.
+- `npm run dev` now starts browser mode with no database; `npm run dev:server` starts server mode.
+- Security fix in a Fastify dependency (fast-uri).
+
+### Removed
+- Docker: `Dockerfile`, `docker-compose.yml`, `.dockerignore`.
+
 ## 0.1.0 (2026-10-19)
 First complete version, phases 0 to 8 (see `docs/phases.md`).
 

@@ -2,49 +2,57 @@
 
 Where the code starts, in what order things run, and which function calls which. Paths are relative to the project folder. Update this file in the same change whenever the order changes.
 
-## 1. Server start
+## 1. Where a request goes
+
+Every screen calls `api.get`, `api.post` and so on in `web/src/lib/api.ts`. What happens next depends on the data mode the app was built with (`config/app.json` `dataMode`, or `--mode browser` / `--mode server`):
+
+```
+api.request(method, path, body)                web/src/lib/api.ts
+  browser mode: localRequest()                 -> section 10 (built-in backend, no network)
+  server mode:  fetch(serverAddress + path)    -> section 2 (server)
+both end in the same route handler in server/src/core/routes/*.ts
+```
+
+## 2. Server mode: server start and requests
 
 Entry point: `server/src/index.ts` (built to `server/dist/index.js`).
 
 ```
 main()                                         server/src/index.ts
   readEnv()                                    server/src/env.ts            env vars -> Env object
-  bootstrap(env)                               server/src/bootstrap.ts
-    loadConfig(configDir)                      server/src/config/load.ts
-      readJson(...) x5 with schemas            server/src/config/schema.ts  any problem -> ConfigError (CONFIG-001), server stops
-      check logo/favicon files, duplicate Excel names, legal files
-    createPool(DATABASE_URL)                   server/src/db/pool.ts
+  bootstrap(env)                               server/src/node/bootstrap.ts
+    loadConfig(configDir)                      server/src/node/load-config.ts -> core/config/validate.ts
+      every file checked                       any problem -> ConfigError (CONFIG-001), server stops
+    createPgDb(DATABASE_URL)                   server/src/node/pg-db.ts
     SELECT 1                                   fails -> "DB-001", server stops
-    migrate(db)                                server/src/db/migrate.ts     runs new files in db/migrations
-    ensureAdmin(db, INITIAL_ADMIN_PASSWORD)    creates "admin" on an empty database
-  seedSampleData(db)  (only if SEED_SAMPLE_DATA=true and no factories yet)   server/src/scripts/sample-data.ts
+    prepareDatabase(db, readMigrations(), ...) server/src/core/setup.ts
+      runMigrations()                          core/db.ts, SQL files from core/migrations
+      ensureAdmin(INITIAL_ADMIN_PASSWORD)      creates "admin" on an empty database
+      seedSampleData()                         only if SEED_SAMPLE_DATA=true and no factories yet
   buildApp(ctx)                                server/src/app.ts
     register cors, rate-limit, multipart
-    onRequest hook -> loadUser()               server/src/auth/guard.ts     sets req.user from the Bearer token
+    onRequest hook                             tokenFromHeader() -> userForToken()   core/auth/guard.ts
+    for each route in allRoutes                core/router.ts
+      app.route(...)                           reads an uploaded file if the route takes one
     setErrorHandler                            AppError -> { error: { code, message } }
-    systemRoutes, authRoutes, factoryRoutes, uploadRoutes, adminRoutes   server/src/routes/*.ts
-    serve web/dist (if built)
+    serve web/dist-server (if built)
   app.listen(PORT)
 ```
 
-## 2. Any API request
+## 3. Any request, inside the backend (both modes)
 
 ```
-HTTP request
-  onRequest hook: loadUser(req)                server/src/auth/guard.ts
-    bearerToken(req) -> resolveSession(db, token, idleMinutes)   server/src/auth/sessions.ts
-      UPDATE sessions SET last_seen_at ... RETURNING user        (expired or unknown -> null)
-  route handler                                server/src/routes/<file>.ts
-    requireUser / requireAdmin(req)            AUTH-002 / AUTH-005 / PERM-001
-    parse(schema, req.body or req.params)      server/src/validate.ts       REQ-001
-    assertFactoryAccess(db, user, factoryId)   PERM-002
-    requireStatusPermission(user)              PERM-003 (uploads and manual edits)
-    services/*.ts                              database reads and writes
-    audit(...)                                 server/src/services/audit.ts (changes only)
-  reply JSON  |  thrown AppError -> error handler in app.ts
+route handler                                  server/src/core/routes/<file>.ts
+  requireUser / requireAdmin(req)              AUTH-002 / AUTH-005 / PERM-001
+  parse(schema, req.body or req.params)        core/validate.ts             REQ-001
+  assertFactoryAccess(db, user, factoryId)     PERM-002
+  requireStatusPermission(user)                PERM-003 (uploads and manual edits)
+  core/services/*.ts                           database reads and writes (same SQL on PostgreSQL and PGlite)
+  audit(...)                                   core/services/audit.ts (changes only)
+returns JSON data, or a BinaryResponse for files; throws AppError on refusal
 ```
 
-## 3. App start
+## 3b. App start
 
 Entry point: `web/src/main.tsx` -> `<App />` in `web/src/App.tsx`.
 
@@ -52,9 +60,10 @@ Entry point: `web/src/main.tsx` -> `<App />` in `web/src/App.tsx`.
 App
   QueryClientProvider
   ConfigProvider                       web/src/config/ConfigProvider.tsx
-    api.get("/api/config")             web/src/lib/api.ts, address from lib/serverAddress.ts
-      fails -> ConnectionScreen        (retry, change server address)
-      ok    -> applyTheme(): CSS variables, title, favicon
+    shows "Starting" while waiting (browser mode: first start creates the database)
+    api.get("/api/config")             web/src/lib/api.ts
+      fails -> ConnectionScreen        "Cannot connect" (server mode) or "Cannot start" (browser mode), with the error code
+      ok    -> applyTheme(): CSS variables, title, favicon (lib/fileUrl.ts)
   AuthProvider                         web/src/auth/AuthProvider.tsx
     token in sessionStorage? -> GET /api/auth/me
     starts the idle timer (sessionIdleMinutes)
@@ -62,7 +71,7 @@ App
   HashRouter
     BackgroundLayer                    web/src/background/BackgroundLayer.tsx
     Routes -> page                     Protected() sends to /login or /account/password when needed
-    DebugPanel (if app.json debug)
+    DebugPanel (if app.json debug)     shows data mode and how the built-in backend runs
 ```
 
 ## 4. Signing in
@@ -70,7 +79,7 @@ App
 ```
 LoginPage.submit()                     web/src/pages/LoginPage.tsx
   useAuth().login(username, password)  AuthProvider
-    api.post("/api/auth/login")        -> server/src/routes/auth.ts
+    api.post("/api/auth/login")        -> server/src/core/routes/auth.ts
       verifyPassword() (bcrypt)        wrong -> AUTH-001, inactive -> AUTH-003
       createSession() -> token
     setToken(token)                    sessionStorage
@@ -129,7 +138,7 @@ Click "Open machine" -> /factories/3/machines/12 -> MachinePage keeps the floor 
 ```
 UploadPage.choose(file)                web/src/pages/UploadPage.tsx
   api.upload("/api/factories/:id/uploads/preview", file)
-    -> uploadRoutes preview            server/src/routes/uploads.ts
+    -> uploadRoutes preview            server/src/core/routes/uploads.ts
        authorise(): feature on, signed in, PERM-003, PERM-002
        readUploadedFile()              size (FILE-002), .xlsx only (FILE-003)
        check(ctx, factoryId, file)
@@ -159,7 +168,7 @@ UploadPage.confirm()
 ```
 MachinePage -> EditStatus.submit()     web/src/pages/MachinePage.tsx
   useManualStatus(id).mutate()         lib/queries.ts
-    PUT /api/machines/:id/status       server/src/routes/factories.ts
+    PUT /api/machines/:id/status       server/src/core/routes/factories.ts
       feature on, requireStatusPermission, assertFactoryAccess, shift <= shiftsPerDay, no future date
       INSERT status_records (source "manual"), audit("status.manual")
 ```
@@ -168,7 +177,37 @@ MachinePage -> EditStatus.submit()     web/src/pages/MachinePage.tsx
 
 ```
 AdminPage (?tab=users | factories | log)        web/src/pages/admin/AdminPage.tsx
-  UsersTab      -> /api/admin/users ...          server/src/routes/admin.ts
-  FactoriesTab  -> /api/admin/factories ..., /api/admin/machines ..., photo and model uploads (services/files.ts saveFile)
+  UsersTab      -> /api/admin/users ...          server/src/core/routes/admin.ts
+  FactoriesTab  -> /api/admin/factories ..., /api/admin/machines ..., photo and model uploads (core/services/files.ts saveFile)
   AuditTab      -> /api/admin/audit
 ```
+
+## 10. Browser mode: the built-in backend
+
+```
+first api call -> startLocal()                         web/src/lib/api.ts
+  import("../local-backend").startLocalBackend()       web/src/local-backend/index.ts
+    try, in order, until one works (each failure logged as LOCAL-003):
+      1. new SharedWorker(backend.worker.ts)           one backend for all tabs
+      2. new Worker(backend.worker.ts)                 one per tab, only one tab may hold the data (LOCAL-002)
+      3. startInPage()                                 backend-core.ts in the page itself
+    worker says {status, needsEngine}
+      needsEngine -> page downloads pglite.wasm, initdb.wasm, pglite.data and sends them (engine)
+    worker: startBackend(engine)                       web/src/local-backend/backend-core.ts
+      bundledConfig()                                  local-backend/config.ts -> core/config/validate.ts (CONFIG-001)
+      PGlite.create({ fs: MemfsFrontendFS(IdbStorage("factory-atlas-db")) })   local-backend/idb-storage.ts loads saved blocks
+      prepareDatabase()                                core/setup.ts (tables, admin, sample data on first start)
+    worker says {started, ok} -> backend ready
+
+each request:
+  localRequest()                                       web/src/lib/api.ts
+    uploaded file -> bytes; post {request, id, input} to the worker
+  worker: handleRequest(ctx, input)                    backend-core.ts
+    dispatch(ctx, input)                               server/src/core/router.ts
+      userForToken() -> match route -> handler         same code as server mode (section 3)
+    every query's changed blocks saved to IndexedDB    idb-storage.ts apply(), before the answer is sent
+  reply {status, body} or {status, binary}
+  api.ts turns it into a Response: JSON, or a Blob for files
+images and 3D models: useFileUrl(path) asks for the file the same way and shows it from a blob: address   lib/fileUrl.ts
+```
+

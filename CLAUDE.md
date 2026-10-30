@@ -17,14 +17,17 @@ Read these before doing anything, in this order:
 ## Commands
 | Command | What it does |
 |---|---|
-| `npm run dev` | Server and app with live reload (needs PostgreSQL and `DATABASE_URL`) |
-| `npm run build` | Build web app and server |
-| `npm test` | Server tests (needs `TEST_DATABASE_URL`) |
-| `npm run test:e2e` | Browser tests (needs `E2E_DATABASE_URL`) |
+| `npm run dev` | The app with live reload, browser mode (no database to install) |
+| `npm run dev:server` | Server and app with live reload, server mode (needs PostgreSQL and `DATABASE_URL`) |
+| `npm run build` | Build the app (browser mode and server mode) and the server |
+| `npm test` | Backend tests on PGlite and PostgreSQL (PostgreSQL at `TEST_DATABASE_URL`) |
+| `npm run test:e2e` | Browser tests in both modes (server mode needs `E2E_DATABASE_URL`) |
 | `npm run typecheck` | TypeScript check of server and app |
 | `npm run check-config` | Check the config folder |
 | `npm run desktop:build` | Build the desktop installer for this computer |
-| `docker compose up -d --build` | Run everything in Docker |
+
+## Two data modes
+The backend in `server/src/core` runs either in the browser (browser mode, default) or on a server (server mode). Code in `server/src/core` must work in both: no Node-only imports. See `docs/rules.md` and `docs/flow.md` section 10.
 
 ## Writing style for user-facing text
 Plain English, short sentences, no jargon, no em-dashes, no emoji. See `docs/design.md`.

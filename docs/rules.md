@@ -6,12 +6,12 @@ How we build. Applies to people and to AI assistants. An AI must read this file 
 1. **Read `docs/memory.md` first**, then the files the change touches.
 2. **Small steps.** One phase or one feature at a time (`docs/phases.md`).
 3. **Anything a client may want different goes in `/config`**, never hard-coded: names, colours, texts, speeds, limits, column names, status words, feature switches.
-4. **Every new config field** gets: a rule in `server/src/config/schema.ts`, a type in `shared/src/config.ts`, a line in `docs/config.md`.
-5. **Every new error** gets a code in `server/src/errors.ts` (server) or a prefix code in the app, and a row in `docs/troubleshooting.md` with cause and fix.
+4. **Every new config field** gets: a rule in `server/src/core/config/schema.ts`, a type in `shared/src/config.ts`, a line in `docs/config.md`.
+5. **Every new error** gets a code in `server/src/core/errors.ts` (server) or a prefix code in the app, and a row in `docs/troubleshooting.md` with cause and fix.
 6. **Every meaningful decision** gets an entry in `docs/decisions.md`: what, why, what we gave up.
 7. **When the order of execution changes**, update `docs/flow.md` in the same change.
 8. **At the end of a change**, update `docs/memory.md` (state, next step, open issues) and `CHANGELOG.md`.
-9. **Tests must pass before a change is accepted**: `npm test`, `npm run typecheck`, `npm run test:e2e`. New behaviour gets a test.
+9. **Tests must pass before a change is accepted**: `npm test`, `npm run typecheck`, `npm run test:e2e`. New behaviour gets a test. Backend changes are tested on both engines by the API suite; screens in both modes by the e2e tests.
 10. **Quiz before merge.** For any major change, the AI asks the project owner 3 to 5 questions about what changed and why. The change is merged only if the owner passes.
 
 ## 2. Never
@@ -23,6 +23,9 @@ How we build. Applies to people and to AI assistants. An AI must read this file 
 6. Never show sample or generated numbers as if they were real. Sample data is marked `is_sample` and labelled "Sample".
 7. Never break the rules in `docs/design.md` (no purple gradients, pill buttons, emoji icons, em-dashes, cursor effects, fake counters, AI-generated copy presented as real).
 8. Never add a library without a reason recorded in `docs/decisions.md`.
+9. Never import Node-only modules (`node:fs`, `node:crypto`, `Buffer`, `pg`, `fastify`) in `server/src/core`. That code also runs in the browser. Node-only code goes in `server/src/node` or `server/src/app.ts`.
+10. Never switch the browser database back to PGlite's `idb://` storage or turn on `relaxedDurability`: both lost or slowed data in testing (D-033).
+11. Never split `new Worker(new URL("./x.ts", import.meta.url))` or `new SharedWorker(...)` into two statements. The build only recognises and bundles a worker written in one piece; split, the worker silently fails to load.
 
 ## 3. Libraries we use (and what for)
 | Need | Use | Do not add |
@@ -37,12 +40,13 @@ How we build. Applies to people and to AI assistants. An AI must read this file 
 | Server | Fastify | Express alongside it |
 | Validation | Zod | hand-written checks |
 | Excel | ExcelJS | SheetJS from npm (old, unmaintained there) |
-| Database | `pg` with plain SQL | an ORM |
+| Database | `pg` (server mode) and PGlite (browser mode), both through `core/db.ts`, plain SQL | an ORM, SQL that only one of the two understands |
 
 ## 4. Error handling
-- **Server:** throw `new AppError("CODE")` with a code from `errors.ts`. The error handler turns it into `{ error: { code, message, details } }` with the right HTTP status. Anything else is logged and answered with `SERVER-001`.
+- **Backend (both modes):** throw `new AppError("CODE")` with a code from `core/errors.ts`. The error handler turns it into `{ error: { code, message, details } }` with the right HTTP status. Anything else is logged and answered with `SERVER-001`.
 - **Bad input:** use `parse(schema, data)` from `validate.ts`. It answers `REQ-001` and names each bad field.
 - **App:** every failed call becomes an `ApiError` with the server code, or `NET-001` when the server is unreachable. Show it with `<ErrorNotice error={...} />`, which prints the message and the code.
+- **Browser mode startup:** if the built-in backend cannot start, every request answers `LOCAL-001` (or `CONFIG-001`, `LOCAL-002`) and the app shows "Cannot start" with the code.
 - **Excel problems** are not exceptions: they are listed in the preview (`XL-0xx` errors block saving, `XL-1xx` warnings do not).
 - **Background (globe, floor):** failures must never break the page. `BackgroundLayer` catches them and shows the plain background (`BG-001`).
 - **Config:** a bad config stops the server at startup with `CONFIG-001` and a list of every problem (file, field, what is wrong).

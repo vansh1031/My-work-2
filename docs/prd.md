@@ -4,7 +4,9 @@ What Factory Atlas is, who it is for, and what it does. If the code and this fil
 
 ## 1. What we are building
 
-An installable app (Windows and Linux now, Mac and Android later) that shows a company's factories and the status of every machine in them. It is sold to many client companies. Each client gets its own server and its own branding, changed through config files only.
+An app that shows a company's factories and the status of every machine in them. It runs as a website or an installable desktop app (Windows and Linux now, Mac and Android later). It is sold to many client companies, each with its own branding, changed through config files only.
+
+For now it runs in **browser mode**: the app has its own built-in database and needs no server or installation; data stays on the computer where it is used. **Server mode** (a shared server per client, so several computers see the same data) uses the same code and is ready for later.
 
 There is no live connection to the machines. Status comes from an Excel sheet uploaded after the last shift of each day, or from a manual edit by an allowed user.
 

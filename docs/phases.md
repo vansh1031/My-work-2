@@ -14,13 +14,15 @@ Status: **done**, **in review** (built and tested, waiting for owner approval an
 | 5 | Machine page | Details, shifts, 14 days, previous and next, manual status edit | in review |
 | 6 | Excel upload | Template download, preview with errors and warnings, confirm, corrected uploads, upload history and download | in review |
 | 7 | History | Date range grid and totals per machine | in review |
-| 8 | Packaging | Docker setup, Windows and Linux installers (GitHub workflow), system status page, legal pages, tests in CI | in review |
+| 8 | Packaging | Windows and Linux installers (GitHub workflow), system status page, legal pages, tests in CI. (Docker setup was here; removed in 8b.) | in review |
+| 8b | Browser mode | Whole app runs in the browser with its own database (PGlite), no install; website on GitHub Pages; Docker removed; same backend code for both modes | in review |
 | 9 | Client launch | Everything in the launch checklist in `docs/prd.md` for the first client | next |
 | 10 | Machine page, part 2 | Owner to decide what else the machine page shows (planned in the first discussions) | later |
 | 11 | Uptime and downtime | Analysis over time | later |
 | 12 | Mac and Android apps | Same code through Tauri | later |
-| 13 | Office network mode | Run the server on a computer in the client's office, no internet | later |
+| 13 | Office network mode | Run the server on a computer in the client's office, no internet (server mode) | later |
 | 14 | Live machine status | Read status directly from machines (PLC or sensors) as a plug-in | later |
+| 15 | Shared data again | Move from browser mode to server mode for a client who needs several computers to share data | later |
 
 All of phases 0 to 8 were built together on request of the owner, then tested. Each phase is still reviewed and quizzed separately before it counts as done.
 

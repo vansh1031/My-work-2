@@ -2,7 +2,11 @@
 
 Everything that changes from one client to the next is in the `config/` folder. No code needs to change.
 
-**After editing any config file, restart the server** (`docker compose restart app`). If a file has a mistake, the server will not start and its log names the file and field, for example:
+**After editing any config file:**
+- **Browser mode** (the default, `"dataMode": "browser"`): the config is built into the app. Rebuild it (`npm run build`), or push to `main` and the website rebuilds itself.
+- **Server mode:** restart the server.
+
+If a file has a mistake, the app shows "Cannot start" (browser mode) or the server refuses to start (server mode), naming the file and field, for example:
 
 ```
 CONFIG-001: The configuration has 1 problem(s):
@@ -11,7 +15,7 @@ CONFIG-001: The configuration has 1 problem(s):
 
 To check the files without starting the server: `npm run check-config`.
 
-The desktop app also reads `app.json` **when it is built** (`apiBaseUrl`, `allowServerAddressChange`). Everything else it receives from the server at startup.
+Some settings in `app.json` take effect **when the app is built**: `dataMode`, `apiBaseUrl`, `allowServerAddressChange`.
 
 ---
 
@@ -24,8 +28,8 @@ The desktop app also reads `app.json` **when it is built** (`apiBaseUrl`, `allow
 4. `theme.json`: their colours (`palettes.dark` or `palettes.light`, and `mode`).
 5. `excel.json`: their column names and status words, if their sheet differs.
 6. `legal/privacy.md`, `legal/terms.md`: their reviewed texts.
-7. `app.json`: `apiBaseUrl` = their server address (for the desktop installer).
-8. Start their server with `SEED_SAMPLE_DATA=false` and a strong `INITIAL_ADMIN_PASSWORD`.
+7. Browser mode: build with `SEED_SAMPLE_DATA=false` and a strong `INITIAL_ADMIN_PASSWORD` (see "Build settings" below).
+8. Server mode: `app.json` `"dataMode": "server"` and `apiBaseUrl` = their server address; start their server with `SEED_SAMPLE_DATA=false` and a strong `INITIAL_ADMIN_PASSWORD`.
 9. Build the desktop installers (see `SETUP.md`).
 
 ### Their Excel calls the machine column "M/C No."
@@ -52,8 +56,9 @@ Not a config change: Admin, Factories and machines, Edit details, Shifts per day
 
 | Field | Default | Meaning |
 |---|---|---|
-| `apiBaseUrl` | `http://localhost:4000` | Server address built into the desktop app. The browser version always uses the address it was opened from. |
-| `allowServerAddressChange` | `true` | Shows "Connection settings" on the login screen so a user can type another server address. Set `false` for client installers. |
+| `dataMode` | `browser` | `browser`: the app has its own built-in database and needs no server; data stays in that browser on that computer. `server`: the app uses a Factory Atlas server and everyone shares the data. Taken when the app is built; `npm run build -w web -- --mode server` (or `--mode browser`) overrides it for one build. |
+| `apiBaseUrl` | `http://localhost:4000` | Server mode only: server address built into the desktop app. The browser version always uses the address it was opened from. |
+| `allowServerAddressChange` | `true` | Server mode only. Shows "Connection settings" on the login screen so a user can type another server address. Set `false` for client installers. |
 | `debug` | `false` | Shows the debug panel. |
 | `sessionIdleMinutes` | `30` | Sign out after this many minutes without activity. |
 | `defaultShiftsPerDay` | `2` | Pre-filled value when the admin adds a factory. |
@@ -153,7 +158,7 @@ Logo and favicon. Any file names, as long as `branding.json` points to them.
 
 ## Environment variables (server)
 
-Set in `.env` (Docker) or the shell. These are per installation, or secret, so they are not in config files.
+Server mode only. Set in `.env` or the shell. These are per installation, or secret, so they are not in config files.
 
 | Variable | Default | Meaning |
 |---|---|---|
@@ -161,10 +166,22 @@ Set in `.env` (Docker) or the shell. These are per installation, or secret, so t
 | `PORT` | `4000` | Server port. |
 | `HOST` | `0.0.0.0` | Network address to listen on. |
 | `INITIAL_ADMIN_PASSWORD` | `change-me-now` | Password of the first `admin` user on an empty database. Must be changed at first sign-in. |
-| `SEED_SAMPLE_DATA` | `false` (Docker file: `true`) | Add sample factories to an empty database. |
+| `SEED_SAMPLE_DATA` | `false` | Add sample factories to an empty database. |
 | `CONFIG_DIR` | `<project>/config` | Where the config folder is. |
 | `DATA_DIR` | `<project>/data` | Where photos and 3D models are stored. Back it up with the database. |
-| `WEB_DIST_DIR` | `<project>/web/dist` | The built web app the server also serves. |
+| `WEB_DIST_DIR` | `<project>/web/dist-server` | The built web app (server mode build) the server also serves. |
 | `CORS_ORIGINS` | `*` | Comma-separated addresses allowed to call the server. |
 | `LOG_LEVEL` | `info` | `error`, `warn`, `info` or `debug`. |
-| `DB_PASSWORD` | `atlas-local-password` | Docker only: password of the database container. |
+
+## Build settings (browser mode)
+
+Set in the shell when building the browser version. They decide how a brand-new built-in database starts.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `INITIAL_ADMIN_PASSWORD` | `change-me-now` | Password of the first `admin` user in each new browser. Must be changed at first sign-in. |
+| `SEED_SAMPLE_DATA` | `true` | Add the 6 sample factories to each new browser database. Set `false` for a real client. |
+| `API_BASE_URL` | (from `app.json`) | Server mode builds only: overrides `apiBaseUrl`. |
+
+Example (Windows PowerShell): `$env:SEED_SAMPLE_DATA="false"; npm run build -w web`.
+
