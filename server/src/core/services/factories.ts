@@ -26,7 +26,7 @@ function emptyCounts(): StatusCounts {
   return { running: 0, stopped: 0, aborted: 0, shift_ended: 0, unknown: 0 };
 }
 
-function toSummary(row: FactoryRow, machineCount: number, counts: StatusCounts): FactorySummary {
+function toSummary(row: FactoryRow, machineCount: number, counts: StatusCounts, latestWorkDate: string | null): FactorySummary {
   return {
     id: row.id,
     name: row.name,
@@ -40,6 +40,7 @@ function toSummary(row: FactoryRow, machineCount: number, counts: StatusCounts):
     isSample: row.is_sample,
     machineCount,
     statusCounts: counts,
+    latestWorkDate,
   };
 }
 
@@ -53,23 +54,24 @@ export async function listFactories(db: Db, user: { id: number; role: string }, 
     [user.id, user.role === "admin", ids ?? null],
   );
   if (rows.length === 0) return [];
-  const counts = await db.query<{ factory_id: number; status: MachineStatus | null; n: string }>(
-    `SELECT m.factory_id, cs.status, count(*) AS n
+  const counts = await db.query<{ factory_id: number; status: MachineStatus | null; n: string; latest: string | null }>(
+    `SELECT m.factory_id, cs.status, count(*) AS n, max(cs.work_date) AS latest
      FROM machines m LEFT JOIN (${CURRENT_STATUS_SQL}) cs ON cs.machine_id = m.id
      WHERE NOT m.archived AND m.factory_id = ANY($1)
      GROUP BY m.factory_id, cs.status`,
     [rows.map((r) => r.id)],
   );
-  const byFactory = new Map<number, { total: number; counts: StatusCounts }>();
+  const byFactory = new Map<number, { total: number; counts: StatusCounts; latest: string | null }>();
   for (const c of counts.rows) {
-    const entry = byFactory.get(c.factory_id) ?? { total: 0, counts: emptyCounts() };
+    const entry = byFactory.get(c.factory_id) ?? { total: 0, counts: emptyCounts(), latest: null };
     entry.total += Number(c.n);
+    if (c.latest && (!entry.latest || c.latest > entry.latest)) entry.latest = c.latest;
     entry.counts[c.status ?? "unknown"] += Number(c.n);
     byFactory.set(c.factory_id, entry);
   }
   return rows.map((r) => {
     const entry = byFactory.get(r.id);
-    return toSummary(r, entry?.total ?? 0, entry?.counts ?? emptyCounts());
+    return toSummary(r, entry?.total ?? 0, entry?.counts ?? emptyCounts(), entry?.latest ?? null);
   });
 }
 

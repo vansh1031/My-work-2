@@ -2,7 +2,7 @@
 // map tiles. State outlines are added per country, only for the country the globe flies to (fa-states). When online tiles are on (config/app.json map.useOnlineTiles), the online style is used
 // as the base and the same factory and highlight layers are added on top.
 import type { StyleSpecification, LayerSpecification, SourceSpecification } from "maplibre-gl";
-import type { PublicConfig } from "@fa/shared";
+import type { AppConfig } from "../../config/ConfigProvider";
 import type { GeoCollection } from "./geoData";
 
 const EMPTY = { type: "FeatureCollection", features: [] } as const;
@@ -15,7 +15,7 @@ export function overlaySources(): Record<string, SourceSpecification> {
   };
 }
 
-export function overlayLayers(theme: PublicConfig["theme"]): LayerSpecification[] {
+export function overlayLayers(theme: AppConfig["theme"]): LayerSpecification[] {
   const g = theme.globe;
   return [
     { id: "fa-states", type: "line", source: "fa-states", minzoom: 2.5, paint: { "line-color": g.stateBorder, "line-width": 0.8 } },
@@ -37,7 +37,7 @@ export function overlayLayers(theme: PublicConfig["theme"]): LayerSpecification[
 }
 
 /** Soft glow around the globe at low zoom, fading out as the camera gets close. */
-function atmosphere(theme: PublicConfig["theme"]): StyleSpecification["sky"] {
+export function atmosphere(theme: AppConfig["theme"]): StyleSpecification["sky"] {
   return {
     "sky-color": theme.palettes[theme.mode].background,
     "horizon-color": theme.globe.highlightBorder,
@@ -45,7 +45,7 @@ function atmosphere(theme: PublicConfig["theme"]): StyleSpecification["sky"] {
   };
 }
 
-export function builtInStyle(theme: PublicConfig["theme"], countries: GeoCollection): StyleSpecification {
+export function builtInStyle(theme: AppConfig["theme"], countries: GeoCollection): StyleSpecification {
   const g = theme.globe;
   return {
     version: 8,
@@ -65,7 +65,7 @@ export function builtInStyle(theme: PublicConfig["theme"], countries: GeoCollect
 }
 
 /** Loads the online style. Gives up after a few seconds so a slow or blocked network falls back to the built-in style. */
-export async function onlineStyle(url: string, theme: PublicConfig["theme"], timeoutMs = 4000): Promise<StyleSpecification> {
+export async function onlineStyle(url: string, theme: AppConfig["theme"], timeoutMs = 4000): Promise<StyleSpecification> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {

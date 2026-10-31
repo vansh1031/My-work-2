@@ -41,6 +41,12 @@ Add the words to `excel.json` -> `statusValues.running` and `statusValues.stoppe
 ### A factory works 3 shifts
 Not a config change: Admin, Factories and machines, Edit details, Shifts per day = 3.
 
+### The client wants one fixed colour scheme
+`theme.json`: set `mode` to `dark` or `light` and `allowUserSwitch` to `false`.
+
+### Statuses are uploaded only once a week
+`app.json`: set `dataAgeWarningDays` to `7` (or `0` for no warning).
+
 ### Animations make a computer slow
 `animation.json` -> `"reduceMotion": true`. Or turn off one 3D view: `app.json` -> `features.globe` or `features.factoryFloor3d` = `false`. The pages then show only the list or the tiles.
 
@@ -60,6 +66,8 @@ Not a config change: Admin, Factories and machines, Edit details, Shifts per day
 | `sessionIdleMinutes` | `30` | Sign out after this many minutes without activity. |
 | `defaultShiftsPerDay` | `2` | Pre-filled value when the admin adds a factory. |
 | `showSearchWhenMoreThan` | `5` | Show search and filters only when there are more factories (or machines) than this. |
+| `dataAgeWarningDays` | `2` | When a factory's newest status is older than this many days, its row on the home page and its pages show a warning that the statuses may not match the machines today. `0` switches the warning off. Optional; older config folders get `2`. |
+| `showMachineNamesOnFloor` | `true` | Machine codes stand above the machines in the 3D floor when the page opens. People can switch them off with the Names button. Optional; older config folders get `true`. |
 | `statusLabels` | Running, Stopped, Aborted, Shift ended, No data | The words shown next to each status dot. |
 | `map.useOnlineTiles` | `true` | Use the online map (streets, city names) when reachable. If it cannot be reached, the built-in globe is used. |
 | `map.tileStyleUrl` | OpenFreeMap liberty | Address of the online map style. Must be a MapLibre style. |
@@ -87,7 +95,8 @@ Not a config change: Admin, Factories and machines, Edit details, Shifts per day
 
 | Field | Meaning |
 |---|---|
-| `mode` | `dark` or `light`: which palette is used. |
+| `mode` | `dark`, `light` or `system`: which palette is used when the person has not chosen one. `system` follows the computer's own light or dark setting. |
+| `allowUserSwitch` | `true`: a Light / Dark button in the top bar lets each person switch; their choice is kept in their browser. `false`: no button, everyone sees `mode`. Optional; older config folders get `true`. |
 | `fontFamily` | CSS font list. Inter is bundled with the app. |
 | `cornerRadiusPx` | Corner rounding of buttons, cards and panels (0 to 16). Keep it small: no pill shapes. |
 | `palettes.dark`, `palettes.light` | `background`, `surface` (panels), `surfaceRaised` (cards), `border`, `text`, `textMuted`, `accent` (buttons, selection), `accentText`, `danger`, `focus`. |

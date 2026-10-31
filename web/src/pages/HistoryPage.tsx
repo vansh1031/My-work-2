@@ -1,7 +1,10 @@
 // History tab: every machine and shift for a chosen date range, plus totals per machine.
+// "Download CSV" saves the same records for Excel (idea from Edge Watch's History export, D-046).
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { MACHINE_STATUSES } from "@fa/shared";
+import { Download } from "lucide-react";
+import { MACHINE_STATUSES, toCsv } from "@fa/shared";
+import { saveFile } from "../lib/api";
 import { useConfig } from "../config/ConfigProvider";
 import { addDays, daysBetween, todayIso } from "../lib/format";
 import { useFactory, useHistory } from "../lib/queries";
@@ -33,6 +36,23 @@ export function HistoryPage() {
     return { machine: m, counts, aborts: mine.reduce((n, r) => n + r.abortCount, 0), recorded: mine.length };
   });
 
+  const downloadCsv = () => {
+    if (!factory) return;
+    const byId = new Map(factory.machines.map((m) => [m.id, m]));
+    const sorted = records
+      .filter((r) => byId.has(r.machineId) && (!machineId || r.machineId === machineId))
+      .sort((a, b) => a.workDate.localeCompare(b.workDate) || byId.get(a.machineId)!.code.localeCompare(byId.get(b.machineId)!.code) || a.shift - b.shift);
+    const text = toCsv(
+      ["Date", "Shift", "Machine code", "Machine name", "Status", "Times aborted", "Remarks", "Entered by", "Source"],
+      sorted.map((r) => {
+        const m = byId.get(r.machineId)!;
+        return [r.workDate, r.shift, m.code, m.name, config.app.statusLabels[r.status], r.abortCount, r.remarks, r.createdBy, r.source === "manual" ? "Edited by hand" : "Excel upload"];
+      }),
+    );
+    const safeName = factory.name.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "factory";
+    saveFile(new Blob([text], { type: "text/csv;charset=utf-8" }), `${safeName}-history-${from}-to-${to}.csv`);
+  };
+
   return (
     <div className="page">
       {factory && <FactoryHeader factory={factory} />}
@@ -54,6 +74,9 @@ export function HistoryPage() {
               {factory?.machines.map((m) => <option key={m.id} value={m.id}>{m.code} {m.name}</option>)}
             </select>
           </div>
+          <button className="btn" onClick={downloadCsv} disabled={!factory || historyQ.isLoading || records.length === 0} data-testid="history-csv">
+            <Download aria-hidden /> Download CSV
+          </button>
         </div>
         <div className="legend">
           {[...MACHINE_STATUSES].map((s) => <StatusBadge key={s} status={s} />)}

@@ -116,8 +116,8 @@ export function FactoryPage() {
         {(show3d || selectedId) && (
           <div className="column">
             {show3d && (
-              <ViewPanel label="Factory floor" hint={selectedId ? undefined : "Choose a machine to see it in 3D"}>
-                {() => <FactoryFloor machines={factory.machines} selectedId={selectedId} onPick={(m) => select(m)} />}
+              <ViewPanel label="Factory floor" hint={selectedId ? undefined : "Click a machine here or in the list to see its details"}>
+                {() => <FactoryFloor machines={factory.machines} selectedId={selectedId} onPick={(m) => select(m)} onShowAll={() => select(null)} />}
               </ViewPanel>
             )}
             {selectedId && (

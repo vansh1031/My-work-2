@@ -30,7 +30,7 @@ There is no live connection to the machines. Status comes from an Excel sheet up
 
 ### 3.2 Home page: factories
 - At the top: totals across the user's factories (factories, machines, and machines per status).
-- A list of factories: photo, name, "City, State", country, machine count, status counts, and an Open button.
+- A list of factories: photo, name, "City, State", country, machine count, status counts, the date of the newest status, and an Open button. A warning sign shows when that date is older than `dataAgeWarningDays`.
 - Search and filters (country, state) appear when there are more than `showSearchWhenMoreThan` factories.
 - Users see only their assigned factories. Admins see all.
 - Next to the list: a 3D globe in its own panel that slowly rotates; people can drag and zoom it.
@@ -45,6 +45,8 @@ There is no live connection to the machines. Status comes from an Excel sheet up
 - Next to the tiles: a 3D factory floor panel with all machines and a coloured ring under each one showing its status. Clicking a machine in 3D selects it.
 - Clicking a machine flies the camera to it, fades the others and slowly turns it. Switching machines sweeps the camera around the floor. Closing the details (or clicking the tile again) zooms back out.
 - Clicking a tile opens the machine's details under the 3D view (section 3.4). The page address and the breadcrumb follow, so a machine can be linked to.
+- Machine codes stand above the machines in 3D. Toolbar on the 3D floor: Names (on or off), Stop turning, Whole floor.
+- A banner shows when the newest status is older than `dataAgeWarningDays`, with a link to upload the latest sheet for people allowed to upload.
 - Tabs: Machines, History, Uploads.
 
 ### 3.4 Machine details
@@ -66,6 +68,7 @@ There is no live connection to the machines. Status comes from an Excel sheet up
 - Pick a date range and a machine (or all machines).
 - Grid of coloured squares per machine and shift per day.
 - Totals per machine: shifts per status, times aborted, shifts with data.
+- Download CSV: the records of the chosen dates and machine, for Excel.
 
 ### 3.7 Admin
 - Users: create, edit name and role, assign factories, switch upload and edit permission, deactivate, reset password.
@@ -75,6 +78,7 @@ There is no live connection to the machines. Status comes from an Excel sheet up
 ### 3.8 Support and trust
 - System status page (no sign-in needed): server, database, config, WebGL, map tiles.
 - Debug panel switched on from config.
+- Light / Dark button in the top bar (can be switched off per client).
 - Every error has a code, listed in `docs/troubleshooting.md`.
 - Privacy policy and Terms pages, text from `config/legal/*.md`.
 

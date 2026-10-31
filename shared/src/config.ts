@@ -25,7 +25,8 @@ export interface PublicConfig {
     supportContact: string;
   };
   theme: {
-    mode: "dark" | "light";
+    mode: "dark" | "light" | "system";
+    allowUserSwitch: boolean;
     fontFamily: string;
     cornerRadiusPx: number;
     palettes: { dark: Palette; light: Palette };
@@ -56,6 +57,8 @@ export interface PublicConfig {
     sessionIdleMinutes: number;
     defaultShiftsPerDay: number;
     showSearchWhenMoreThan: number;
+    dataAgeWarningDays: number;
+    showMachineNamesOnFloor: boolean;
     statusLabels: Record<"running" | "stopped" | "aborted" | "shift_ended" | "unknown", string>;
     map: { useOnlineTiles: boolean; tileStyleUrl: string };
     features: { globe: boolean; factoryFloor3d: boolean; excelUpload: boolean; manualStatusEdit: boolean; history: boolean };

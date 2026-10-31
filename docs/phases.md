@@ -17,6 +17,7 @@ Status: **done**, **in review** (built and tested, waiting for owner approval an
 | 8 | Packaging | Windows and Linux installers (GitHub workflow), system status page, legal pages, tests in CI. (Docker setup was here; removed in 8b.) | in review |
 | 8b | Browser mode | Whole app runs in the browser with its own database (PGlite), no install; website on GitHub Pages; Docker removed; same backend code for both modes | in review |
 | 8c | Clearer screens | Globe and 3D floor as panels, status totals, breadcrumb, Open buttons, machine details beside the 3D view, faster globe | in review |
+| 8d | Ideas from the owner's other projects | Light / Dark switch, how old the statuses are, 3D floor toolbar with machine names, History CSV download (D-043 to D-047) | in review |
 | 9 | Client launch | Everything in the launch checklist in `docs/prd.md` for the first client | next |
 | 10 | Machine page, part 2 | Owner to decide what else the machine page shows (planned in the first discussions) | later |
 | 11 | Uptime and downtime | Analysis over time | later |

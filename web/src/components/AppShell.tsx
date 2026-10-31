@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { KeyRound, LogOut, UserRound } from "lucide-react";
+import { KeyRound, LogOut, Moon, Sun, UserRound } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { useConfig } from "../config/ConfigProvider";
 import { useFileUrl } from "../lib/fileUrl";
@@ -24,6 +24,19 @@ export function Footer() {
       <Link to="/privacy">Privacy policy</Link>
       <Link to="/terms">Terms and conditions</Link>
     </footer>
+  );
+}
+
+/** Light / dark button (idea from the EdgeAI launcher page). Hidden when config/theme.json allowUserSwitch is false. */
+export function ThemeSwitch() {
+  const { config, setThemeMode } = useConfig();
+  if (!config.theme.allowUserSwitch) return null;
+  const next = config.theme.mode === "dark" ? "light" : "dark";
+  return (
+    <button className="btn btn-ghost" onClick={() => setThemeMode(next)} aria-label={`Switch to ${next} colours`} title={`Switch to ${next} colours`} data-testid="theme-switch">
+      {next === "light" ? <Sun aria-hidden /> : <Moon aria-hidden />}
+      <span className="hide-narrow">{next === "light" ? "Light" : "Dark"}</span>
+    </button>
   );
 }
 
@@ -66,6 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
         </nav>
         <div className="topbar-right">
+          <ThemeSwitch />
           <UserMenu />
         </div>
       </header>
@@ -81,6 +95,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
     <div className="shell">
       <header className="topbar">
         <Brand />
+        <div className="topbar-right">
+          <ThemeSwitch />
+        </div>
       </header>
       <main className="content">{children}</main>
       <Footer />

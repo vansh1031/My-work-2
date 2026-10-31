@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import type { FactorySummary } from "@fa/shared";
 import { useConfig } from "../config/ConfigProvider";
 import { Summary } from "./Summary";
+import { DataAgeNotice } from "./DataAge";
 
 /** Breadcrumb, name, address, the factory's status numbers and the Machines / History / Uploads tabs. */
 export function FactoryHeader({ factory, machineName }: { factory: FactorySummary; machineName?: string }) {
@@ -33,6 +34,7 @@ export function FactoryHeader({ factory, machineName }: { factory: FactorySummar
         </div>
       </div>
       <Summary counts={factory.statusCounts} />
+      <DataAgeNotice factory={factory} />
       <nav className="tabs tabs-page" aria-label="Factory sections">
         <NavLink to={`/factories/${factory.id}`} end className={({ isActive }) => (isActive || onMachine ? "active" : "")}>
           Machines

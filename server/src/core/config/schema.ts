@@ -31,7 +31,10 @@ const paletteSchema = z.object({
 });
 
 export const themeSchema = z.object({
-  mode: z.enum(["dark", "light"]),
+  // "system" follows the computer's light or dark setting.
+  mode: z.enum(["dark", "light", "system"]),
+  // Shows a Light / Dark button in the top bar. The person's choice is kept in their browser.
+  allowUserSwitch: z.boolean().default(true),
   fontFamily: z.string().min(1),
   cornerRadiusPx: z.number().min(0).max(16),
   palettes: z.object({ dark: paletteSchema, light: paletteSchema }),
@@ -116,6 +119,10 @@ export const appSchema = z.object({
   sessionIdleMinutes: z.number().int().min(1).max(24 * 60),
   defaultShiftsPerDay: z.number().int().min(1).max(6),
   showSearchWhenMoreThan: z.number().int().min(0),
+  // Warn when a factory's newest status is older than this many days. 0 switches the warning off.
+  dataAgeWarningDays: z.number().int().min(0).max(365).default(2),
+  // Machine codes shown above the machines in the 3D floor when the page opens. People can switch them off.
+  showMachineNamesOnFloor: z.boolean().default(true),
   statusLabels: z.object({
     running: z.string().min(1),
     stopped: z.string().min(1),

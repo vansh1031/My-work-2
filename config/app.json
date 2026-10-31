@@ -6,6 +6,8 @@
   "sessionIdleMinutes": 30,
   "defaultShiftsPerDay": 2,
   "showSearchWhenMoreThan": 5,
+  "dataAgeWarningDays": 2,
+  "showMachineNamesOnFloor": true,
   "statusLabels": {
     "running": "Running",
     "stopped": "Stopped",

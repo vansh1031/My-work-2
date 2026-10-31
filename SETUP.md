@@ -50,7 +50,7 @@ The desktop installer contains the whole app with its built-in database, so it a
 ### B1. Get the Windows installer
 1. Open the repository on GitHub, then **Actions**, then **Desktop installers**, then **Run workflow**. Leave the server address empty.
 2. After about 15 minutes, download **factory-atlas-windows** at the bottom of the finished run.
-3. Run `Factory Atlas_0.3.0_x64-setup.exe`. Windows may warn that the publisher is unknown, because the installer is not signed yet: choose "More info", then "Run anyway".
+3. Run `Factory Atlas_0.4.0_x64-setup.exe`. Windows may warn that the publisher is unknown, because the installer is not signed yet: choose "More info", then "Run anyway".
 
 Sign in as in A2. Data is kept on that computer.
 

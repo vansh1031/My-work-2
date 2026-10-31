@@ -222,6 +222,23 @@ p { margin: 0; }
 }
 .map-card .card-thumb { width: 5rem; }
 
+/* 3D floor: machine name tags and the toolbar */
+.floor-tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.floor-tag {
+  position: absolute; left: 0; top: 0; white-space: nowrap;
+  font-size: 0.72rem; font-weight: 600; font-family: ui-monospace, monospace;
+  color: var(--text); background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--border); border-left: 3px solid var(--tile-status, var(--border));
+  border-radius: calc(var(--radius) - 2px); padding: 0.05rem 0.35rem;
+  transition: opacity 0.3s;
+}
+/* With a machine chosen, only its own name shows; the others would clutter the edges of the close-up. */
+.floor-tag.dim { display: none; }
+.floor-tag.current { border-color: var(--accent); border-left-color: var(--tile-status, var(--accent)); }
+.view-tools { position: absolute; right: 0.75rem; bottom: 0.75rem; z-index: 2; display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
+.view-tools .btn { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.view-tools .btn[aria-pressed="true"] { border-color: var(--accent); }
+
 /* Wide pages (admin, history, uploads, status) */
 .page-panel {
   flex: 1;
@@ -246,6 +263,7 @@ p { margin: 0; }
   .view-panel { min-height: 0; height: 40vh; flex: none; }
   .topnav { display: none; }
   .content { overflow: auto; }
+  .hide-narrow { display: none; }
 }
 
 /* ---------- Controls ---------- */
@@ -457,6 +475,9 @@ tr:last-child td { border-bottom: none; }
 .notice-warn { border-color: color-mix(in srgb, var(--status-stopped) 60%, var(--border)); }
 .notice-warn svg { color: var(--status-stopped); }
 .notice-ok svg { color: var(--status-running); }
+.data-age { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; color: var(--text-muted); }
+.data-age.old { color: var(--text); }
+.data-age svg { width: 0.9rem; height: 0.9rem; color: var(--status-stopped); }
 .error-code { font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--text-muted); }
 
 .empty { padding: 2rem 1rem; text-align: center; color: var(--text-muted); display: grid; gap: 0.5rem; justify-items: center; }

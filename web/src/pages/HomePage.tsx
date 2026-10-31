@@ -9,6 +9,7 @@ import { useConfig } from "../config/ConfigProvider";
 import { useFactories } from "../lib/queries";
 import { ErrorNotice } from "../components/Notice";
 import { FactoryPhoto } from "../components/PhotoPlaceholder";
+import { DataAgeText } from "../components/DataAge";
 import { StatusSummary } from "../components/StatusSummary";
 import { addCounts, Summary } from "../components/Summary";
 import { ViewPanel } from "../components/ViewPanel";
@@ -34,6 +35,7 @@ function FactoryRow({ factory, selected, onShow, onOpen }: { factory: FactorySum
           <span>{factory.machineCount} machines</span>
           <StatusSummary counts={factory.statusCounts} />
         </span>
+        <DataAgeText factory={factory} />
       </button>
       <button className="btn btn-sm" onClick={onOpen} aria-label={`Open ${factory.name}`}>
         Open <ArrowRight aria-hidden />

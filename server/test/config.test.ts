@@ -16,6 +16,29 @@ describe("config", () => {
     expect(() => loadConfig(CONFIG_DIR)).not.toThrow();
   });
 
+  it("older config folders without the 0.4.0 settings still load, with the defaults", () => {
+    const dir = copyConfig();
+    const theme = JSON.parse(readFileSync(path.join(dir, "theme.json"), "utf8"));
+    delete theme.allowUserSwitch;
+    writeFileSync(path.join(dir, "theme.json"), JSON.stringify(theme));
+    const app = JSON.parse(readFileSync(path.join(dir, "app.json"), "utf8"));
+    delete app.dataAgeWarningDays;
+    delete app.showMachineNamesOnFloor;
+    writeFileSync(path.join(dir, "app.json"), JSON.stringify(app));
+    const config = loadConfig(dir);
+    expect(config.theme.allowUserSwitch).toBe(true);
+    expect(config.app.dataAgeWarningDays).toBe(2);
+    expect(config.app.showMachineNamesOnFloor).toBe(true);
+  });
+
+  it("accepts \"system\" as the colour mode", () => {
+    const dir = copyConfig();
+    const theme = JSON.parse(readFileSync(path.join(dir, "theme.json"), "utf8"));
+    theme.mode = "system";
+    writeFileSync(path.join(dir, "theme.json"), JSON.stringify(theme));
+    expect(loadConfig(dir).theme.mode).toBe("system");
+  });
+
   it("names the file and field when a value is wrong", () => {
     const dir = copyConfig();
     const theme = JSON.parse(readFileSync(path.join(dir, "theme.json"), "utf8"));

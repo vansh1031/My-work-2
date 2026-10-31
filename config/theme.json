@@ -1,5 +1,6 @@
 {
   "mode": "dark",
+  "allowUserSwitch": true,
   "fontFamily": "\"Inter Variable\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
   "cornerRadiusPx": 6,
   "palettes": {

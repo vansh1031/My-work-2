@@ -11,7 +11,8 @@ An app that shows a company's factories on a 3D globe and the status of every ma
 - Factory: machine tiles, a 3D factory floor panel, and machine details beside it
 - Machine: details, shifts, last 14 days, manual status edit (if allowed)
 - Daily Excel upload with a preview, permanent upload history, corrected uploads
-- History grid, change log, system status page, debug panel
+- History grid with CSV download, change log, system status page, debug panel
+- Light / Dark switch; every factory shows how old its statuses are
 
 ## Start here
 | I want to | Read |

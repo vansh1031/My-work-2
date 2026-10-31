@@ -64,6 +64,7 @@ describe("admin setup", () => {
       name: "Pune Assembly", city: "Pune", state: "Maharashtra", country: "India", latitude: 18.52, longitude: 73.86, shiftsPerDay: 3,
     });
     puneId = f2.json().factory.id;
+    expect(f2.json().factory.latestWorkDate).toBeNull();
     for (const code of ["M-01", "M-02"]) {
       const m = await send("POST", `/api/admin/factories/${indoreId}/machines`, admin, { code, name: `Machine ${code}`, machineType: "cnc" });
       expect(m.statusCode).toBe(200);
@@ -164,6 +165,9 @@ describe("Excel upload", () => {
     const m1 = factory.machines.find((m: { code: string }) => m.code === "M-01");
     expect(m1.current).toMatchObject({ status: "aborted", shift: 2, workDate: day, abortCount: 2, source: "upload" });
     expect(factory.statusCounts).toMatchObject({ aborted: 1, shift_ended: 1 });
+    expect(factory.latestWorkDate).toBe(day);
+    const list = (await get("/api/factories", viewer)).json().factories;
+    expect(list.find((f: { id: number }) => f.id === indoreId).latestWorkDate).toBe(day);
     const uploads = (await get(`/api/factories/${indoreId}/uploads`, viewer)).json().uploads;
     expect(uploads).toHaveLength(1);
     expect(uploads[0]).toMatchObject({ workDate: day, uploadedBy: "Supervisor", supersededBy: null, rowCount: 4 });

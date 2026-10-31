@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { expectNoHorizontalScroll, sheet, signIn, signInAdmin, todayIso } from "./helpers";
@@ -33,6 +34,7 @@ test("admin first sign-in, globe home, factory, machine", async ({ page }) => {
   await expect(page.locator("[data-testid^=factory-row-]")).toHaveCount(6);
   await expect(page.getByRole("listitem").filter({ hasText: "Factories" })).toContainText("6");
   await expect(page.locator("[data-testid=globe] canvas")).toBeAttached();
+  await expect(page.locator("[data-testid^=factory-row-]").first()).toContainText("Data from");
 
   // Showing a factory on the globe, then opening it from the card on the globe.
   await page.getByRole("button", { name: "Show Indore Plant on the globe" }).click();
@@ -50,7 +52,33 @@ test("admin first sign-in, globe home, factory, machine", async ({ page }) => {
   await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Hydraulic Press");
   await page.getByRole("button", { name: /Next machine/ }).click();
   await expect(page.getByRole("heading", { name: "Injection Moulding Machine" })).toBeVisible();
+
+  // 3D toolbar: machine names can be switched off and on; "Whole floor" goes back to the overview.
+  // With a machine chosen only its own name shows; on the whole floor all six do.
+  await expect(page.locator(".floor-tag:visible")).toHaveCount(1);
+  await expect(page.locator(".floor-tag:visible")).toHaveText("M-04");
+  await page.getByTestId("floor-names").click();
+  await expect(page.locator(".floor-tag")).toHaveCount(0);
+  await page.getByTestId("floor-names").click();
+  await expect(page.locator(".floor-tag:visible")).toHaveCount(1);
+  await page.getByTestId("floor-show-all").click();
+  await expect(page).not.toHaveURL(/\/machines\//);
+  await expect(page.getByTestId("floor-show-all")).toHaveCount(0);
+  await expect(page.locator(".floor-tag:visible")).toHaveCount(6);
   expect(errors).toEqual([]);
+});
+
+test("light and dark switch is remembered in this browser", async ({ page }) => {
+  await signInAdmin(page);
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await page.getByTestId("theme-switch").click();
+  await expect(html).toHaveAttribute("data-theme", "light");
+  await page.reload();
+  await expect(page.locator("[data-testid^=factory-row-]").first()).toBeVisible();
+  await expect(html).toHaveAttribute("data-theme", "light");
+  await page.getByTestId("theme-switch").click();
+  await expect(html).toHaveAttribute("data-theme", "dark");
 });
 
 test("viewer sees only assigned factories and no edit or upload controls", async ({ page }) => {
@@ -167,6 +195,12 @@ test("history shows the grid and totals", async ({ page }) => {
   await page.getByRole("link", { name: "History" }).click();
   await expect(page.getByText("Totals for this period")).toBeVisible();
   await expect(page.getByRole("row", { name: /M-04 Injection Moulding Machine/ })).toBeVisible();
+
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("history-csv").click()]);
+  expect(download.suggestedFilename()).toMatch(/^Indore-Plant-history-\d{4}-\d{2}-\d{2}-to-\d{4}-\d{2}-\d{2}\.csv$/);
+  const text = readFileSync(await download.path(), "utf8");
+  expect(text.split("\r\n")[0]).toBe("\uFEFFDate,Shift,Machine code,Machine name,Status,Times aborted,Remarks,Entered by,Source");
+  expect(text).toContain(",M-04,Injection Moulding Machine,");
 });
 
 for (const size of [

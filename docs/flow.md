@@ -63,13 +63,15 @@ App
     shows "Starting" while waiting (browser mode: first start creates the database)
     api.get("/api/config")             web/src/lib/api.ts
       fails -> ConnectionScreen        "Cannot connect" (server mode) or "Cannot start" (browser mode), with the error code
-      ok    -> applyTheme(): CSS variables, title, favicon (lib/fileUrl.ts)
+      ok    -> applyBranding(): title, favicon (lib/fileUrl.ts)
+            -> light or dark: the choice saved in this browser ("factory-atlas.theme", only if theme.allowUserSwitch),
+               else theme.mode ("system" follows the computer). The screens get config.theme.mode = the mode in use.
+            -> applyTheme(): CSS variables and <html data-theme>; runs again when the mode changes
+               (ThemeSwitch button in the top bar, components/AppShell.tsx -> setThemeMode())
   AuthProvider                         web/src/auth/AuthProvider.tsx
     token in sessionStorage? -> GET /api/auth/me
     starts the idle timer (sessionIdleMinutes)
-  SceneProvider                        web/src/state/SceneProvider.tsx    what the background shows
   HashRouter
-    BackgroundLayer                    web/src/background/BackgroundLayer.tsx
     Routes -> page                     Protected() sends to /login or /account/password when needed
     DebugPanel (if app.json debug)     shows data mode and how the built-in backend runs
 ```
@@ -94,6 +96,7 @@ HomePage                               web/src/pages/HomePage.tsx
   Summary(addCounts(...))                       components/Summary.tsx   totals across the user's factories
   selectedId from the address (?f=3)
   FactoryRow: row click -> select(id)   Open button -> /factories/3
+    DataAgeText(factory)                        components/DataAge.tsx  "Data from 30 Oct", warning after dataAgeWarningDays
   ViewPanel("Globe")                            components/ViewPanel.tsx  WebGL check, lazy load, BG-001 message on failure
     GlobeView(factories, selectedId, onPick)    web/src/views/globe/GlobeView.tsx
       loadCountries()  and  onlineStyle()       fetched at the same time (geoData.ts, globeStyle.ts)
@@ -117,7 +120,8 @@ GlobeDirector.showFactory(f)
 ```
 FactoryPage                            web/src/pages/FactoryPage.tsx   routes /factories/:id and /factories/:id/machines/:mid
   useFactory(id) -> GET /api/factories/:id      listFactories + listMachines (current status per machine)
-  FactoryHeader                                 components/FactoryHeader.tsx: breadcrumb, Summary, tabs
+  FactoryHeader                                 components/FactoryHeader.tsx: breadcrumb, Summary, DataAgeNotice, tabs
+    DataAgeNotice(factory)                      components/DataAge.tsx: banner when latestWorkDate is old or missing
   selectedId from the address (:mid)
   MachineTile click -> select(mid) -> navigate to /factories/:id/machines/:mid (click again closes)
   ViewPanel("Factory floor")
@@ -125,6 +129,9 @@ FactoryPage                            web/src/pages/FactoryPage.tsx   routes /f
       layoutMachines(machines)                  layout.ts   fixed spiral positions
       MachineOnFloor x N                        status ring colour, MachineModel; click -> onPick(mid)
       CameraRig                                 tween to focusCamera() or overviewCamera(panel shape); switching adds switchSweepDegrees
+                                                idle turning stops while "Stop turning" is pressed
+      NameTags                                  each frame, moves the HTML name tags (.floor-tags) above the machines
+      toolbar                                   Names on/off, Stop turning / Turn, Whole floor -> onShowAll() -> /factories/:id
   MachineDetails(machineId, ...)                components/MachineDetails.tsx, under the 3D view
     useMachine(mid) -> GET /api/machines/:mid   details, shifts, last 14 days
     Previous / Next -> select(other mid); close -> /factories/:id

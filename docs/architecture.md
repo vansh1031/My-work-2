@@ -73,6 +73,7 @@ factory-atlas/
     config.ts               Shape of the public config the app receives
     status.ts               The four machine statuses
     geo.ts                  Distance and "slide or long flight" decision for the globe
+    csv.ts                  CSV text for downloads (History tab), safe to open in Excel
   server/src/
     core/                   THE BACKEND. Runs in both modes. No Node-only or Fastify imports here.
       router.ts             All routes in one list, and dispatch() to call them without HTTP
@@ -127,7 +128,8 @@ factory-atlas/
       webgl.ts              Checks whether this computer can draw 3D
     src/pages/              One file per screen; admin/ has the three admin tabs
     src/components/         Shared pieces: FactoryHeader (breadcrumb, numbers, tabs), Summary, MachineDetails,
-                            ViewPanel, StatusBadge, Notice, Modal, AppShell, DebugPanel ...
+                            DataAge (how old the statuses are), ViewPanel, StatusBadge, Notice, Modal,
+                            AppShell (top bar with the Light / Dark switch), DebugPanel ...
     src/lib/                api.ts (all backend calls), fileUrl.ts (images and models), queries.ts, debug.ts,
                             serverAddress.ts, format.ts
     src/styles/global.css   All styling, driven by theme variables

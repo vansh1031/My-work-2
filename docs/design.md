@@ -34,7 +34,7 @@ How the app looks and moves. All colours and sizes below are defaults from `conf
 | accent | #2f81f7 | primary buttons, selected card, links |
 | danger | #f85149 | errors |
 
-A light palette is also defined. Switch with `"mode": "light"`.
+A light palette is also defined. The default is set with `"mode"` (`dark`, `light` or `system`). People can switch with the Light / Dark button in the top bar unless `allowUserSwitch` is `false`; their choice is kept in their browser (D-043).
 
 ### Status colours
 | Status | Colour | Word (from `app.json` statusLabels) |

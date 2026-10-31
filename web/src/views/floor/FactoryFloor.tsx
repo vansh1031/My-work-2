@@ -2,8 +2,12 @@
 // Nothing selected: the camera slowly circles the whole floor. A machine selected: the camera flies to it, the
 // other machines fade out and the selected one slowly turns. Switching machines sweeps the camera around the floor
 // (config/animation.json factoryFloor.switchSweepDegrees) before closing in.
-import { useEffect, useMemo, useRef } from "react";
+// Toolbar (idea from Edge Watch's 3D machine view, D-045): machine names on or off, pause the slow turning,
+// and "Whole floor" to go back to the overview. Names are plain HTML placed over the canvas each frame
+// (drei Html crashed on unmount, D-014).
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Eye, EyeOff, Maximize2, Pause, Play } from "lucide-react";
 import * as THREE from "three";
 import type { Machine } from "@fa/shared";
 import { useConfig } from "../../config/ConfigProvider";
@@ -17,6 +21,8 @@ interface Props {
   selectedId: number | null;
   /** A machine was clicked in the 3D view. */
   onPick(machineId: number): void;
+  /** "Whole floor" was clicked: clear the selection. */
+  onShowAll(): void;
 }
 
 interface CameraState {
@@ -42,7 +48,7 @@ function focusCamera(p: Placement): CameraState {
   return { az: Math.atan2(p.x, p.z), polar: 1.1, radius: 10, target: new THREE.Vector3(p.x, 1.4, p.z) };
 }
 
-function CameraRig({ placements, radius, selectedId }: { placements: Placement[]; radius: number; selectedId: number | null }) {
+function CameraRig({ placements, radius, selectedId, turning }: { placements: Placement[]; radius: number; selectedId: number | null; turning: boolean }) {
   const { config, reduceMotion } = useConfig();
   const anim = config.animation.factoryFloor;
   const { camera, size } = useThree();
@@ -93,7 +99,7 @@ function CameraRig({ placements, radius, selectedId }: { placements: Placement[]
       if (k >= 1) {
         tween.current = null;
       }
-    } else if (selectedId === null && !reduceMotion) {
+    } else if (selectedId === null && !reduceMotion && turning) {
       state.current.az += THREE.MathUtils.degToRad(anim.idleOrbitDegreesPerSecond) * dt;
     }
     const s = state.current;
@@ -166,6 +172,26 @@ function MachineOnFloor({ machine, placement, focused, dimmed, onPick }: { machi
   );
 }
 
+/** Moves the name tags (plain HTML over the canvas) to stand above each machine, every frame. */
+function NameTags({ placements, layer, visible, selectedId }: { placements: Placement[]; layer: MutableRefObject<HTMLDivElement | null>; visible: boolean; selectedId: number | null }) {
+  const { camera, size, invalidate } = useThree();
+  const v = useMemo(() => new THREE.Vector3(), []);
+  useEffect(() => invalidate(), [visible, selectedId, invalidate]);
+  useFrame(() => {
+    const el = layer.current;
+    if (!el || !visible) return;
+    for (const p of placements) {
+      const tag = el.querySelector<HTMLElement>(`[data-machine="${p.id}"]`);
+      if (!tag) continue;
+      v.set(p.x, 2.9, p.z).project(camera);
+      const behind = v.z > 1;
+      tag.style.display = behind ? "none" : "";
+      tag.style.transform = `translate(-50%, -100%) translate(${((v.x + 1) / 2) * size.width}px, ${((1 - v.y) / 2) * size.height}px)`;
+    }
+  });
+  return null;
+}
+
 function Floor({ radius }: { radius: number }) {
   const { config } = useConfig();
   const f = config.theme.factoryFloor;
@@ -190,14 +216,18 @@ function Floor({ radius }: { radius: number }) {
   );
 }
 
-export function FactoryFloor({ machines, selectedId, onPick }: Props) {
+export function FactoryFloor({ machines, selectedId, onPick, onShowAll }: Props) {
   const { config, reduceMotion } = useConfig();
   const bg = config.theme.palettes[config.theme.mode].background;
   const { placements, radius } = useMemo(() => layoutMachines(machines), [machines]);
   const byId = new Map(machines.map((m) => [m.id, m]));
   const hasSelection = selectedId !== null && byId.has(selectedId);
+  const [names, setNames] = useState(config.app.showMachineNamesOnFloor);
+  const [turning, setTurning] = useState(true);
+  const tagLayer = useRef<HTMLDivElement | null>(null);
 
   return (
+    <>
     <Canvas
       className="map-canvas"
       data-testid="factory-floor"
@@ -218,7 +248,37 @@ export function FactoryFloor({ machines, selectedId, onPick }: Props) {
         const m = byId.get(p.id)!;
         return <MachineOnFloor key={p.id} machine={m} placement={p} focused={p.id === selectedId} dimmed={hasSelection && p.id !== selectedId} onPick={onPick} />;
       })}
-      <CameraRig placements={placements} radius={radius} selectedId={hasSelection ? selectedId : null} />
+      <CameraRig placements={placements} radius={radius} selectedId={hasSelection ? selectedId : null} turning={turning} />
+      <NameTags placements={placements} layer={tagLayer} visible={names} selectedId={hasSelection ? selectedId : null} />
     </Canvas>
+    {names && (
+      <div className="floor-tags" ref={tagLayer} aria-hidden>
+        {placements.map((p) => {
+          const m = byId.get(p.id)!;
+          const cls = hasSelection ? (p.id === selectedId ? "floor-tag current" : "floor-tag dim") : "floor-tag";
+          return (
+            <span key={p.id} data-machine={p.id} className={cls} style={{ ["--tile-status" as string]: `var(--status-${m.current?.status ?? "unknown"})` }}>
+              {m.code}
+            </span>
+          );
+        })}
+      </div>
+    )}
+    <div className="view-tools" role="toolbar" aria-label="3D view">
+      <button type="button" className="btn btn-sm" aria-pressed={names} onClick={() => setNames((n) => !n)} data-testid="floor-names">
+        {names ? <Eye aria-hidden /> : <EyeOff aria-hidden />} Names
+      </button>
+      {!reduceMotion && !hasSelection && (
+        <button type="button" className="btn btn-sm" aria-pressed={!turning} onClick={() => setTurning((t) => !t)}>
+          {turning ? <Pause aria-hidden /> : <Play aria-hidden />} {turning ? "Stop turning" : "Turn"}
+        </button>
+      )}
+      {hasSelection && (
+        <button type="button" className="btn btn-sm" onClick={onShowAll} data-testid="floor-show-all">
+          <Maximize2 aria-hidden /> Whole floor
+        </button>
+      )}
+    </div>
+    </>
   );
 }

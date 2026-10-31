@@ -33,6 +33,8 @@ export interface FactorySummary {
   isSample: boolean;
   machineCount: number;
   statusCounts: StatusCounts;
+  /** Newest day with a status for any of its machines ("YYYY-MM-DD"), or null if none yet. */
+  latestWorkDate: string | null;
 }
 
 export interface CurrentStatus {

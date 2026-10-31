@@ -143,14 +143,18 @@ export const api = {
   },
   /** Downloads a file (Excel template, an uploaded sheet) and hands it to the browser to save. */
   download: async (path: string, fallbackName: string) => {
-    const blob = await request<Blob>("GET", path);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fallbackName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    saveFile(await request<Blob>("GET", path), fallbackName);
   },
 };
+
+/** Hands a file made in the app to the browser to save. */
+export function saveFile(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}

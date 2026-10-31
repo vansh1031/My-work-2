@@ -12,7 +12,7 @@ import { useConfig } from "../../config/ConfigProvider";
 import { setDebugInfo } from "../../lib/debug";
 import { loadCountries } from "./geoData";
 import { GlobeDirector } from "./globeDirector";
-import { builtInStyle, onlineStyle } from "./globeStyle";
+import { atmosphere, builtInStyle, onlineStyle } from "./globeStyle";
 
 setWorkerUrl(new URL(workerUrl, window.location.href).href);
 
@@ -30,6 +30,7 @@ export function GlobeView({ factories, selectedId, onPick, bottomInset, onFail }
   const { config, reduceMotion } = useConfig();
   const container = useRef<HTMLDivElement>(null);
   const director = useRef<GlobeDirector | null>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
   const insetRef = useRef(bottomInset);
   insetRef.current = bottomInset;
   const pickRef = useRef(onPick);
@@ -74,6 +75,7 @@ export function GlobeView({ factories, selectedId, onPick, bottomInset, onFail }
         const loadedCountries = await countries;
         if (!map.loaded()) await new Promise((resolve) => map!.once("load", resolve));
         if (cancelled || !map) return;
+        mapRef.current = map;
         const cityZoom = styleSource === "online" ? g.cityZoom : Math.min(g.cityZoom, g.stateZoom + 0.5);
         director.current = new GlobeDirector(
           map,
@@ -97,11 +99,18 @@ export function GlobeView({ factories, selectedId, onPick, bottomInset, onFail }
       cancelled = true;
       director.current?.destroy();
       director.current = null;
+      mapRef.current = null;
       map?.remove();
     };
     // The map is built once per visit to the page; config does not change while the app runs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Light or dark switched while the globe is open: only the glow around the globe uses the page colour.
+  useEffect(() => {
+    if (ready) mapRef.current?.setSky(atmosphere(config.theme) ?? {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, config.theme.mode]);
 
   useEffect(() => {
     if (ready) director.current?.setFactories(factories, selectedId);

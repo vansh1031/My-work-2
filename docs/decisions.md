@@ -188,3 +188,28 @@ Format: **What** / **Why** / **Trade-off accepted**.
 - **What:** `LOGIN_RATE_LIMIT_PER_MINUTE` (default 10).
 - **Why:** the browser tests sign in many times a minute and hit the limit; real installations keep 10.
 
+### D-043 Light and dark switch in the top bar (idea from the EdgeAI launcher page)
+- **What:** a Light / Dark button in the top bar, also on the sign-in screen. The choice is kept in that browser. `theme.json` `mode` is the default and can now also be `system` (follow the computer). `allowUserSwitch: false` hides the button for a client who wants one fixed look.
+- **Why:** the owner's EdgeAI launcher page already does this, so their clients will expect the same. Bright factory offices often need the light scheme; control rooms prefer dark.
+- **Trade-off:** the globe (built-in style) and the 3D floor keep their own colours from `theme.json` in both schemes; only the page around them changes. The online map style is light anyway.
+
+### D-044 Show how old the statuses are (idea from Edge Watch's data status banner)
+- **What:** the factory list shows "Data from 30 Oct" on every row, with a warning sign when it is older than `app.json` `dataAgeWarningDays` (default 2). The factory pages show a banner then, with a link to upload the latest sheet for people allowed to upload. The server sends `latestWorkDate` with each factory.
+- **Why:** statuses come from a daily Excel upload, not live machines. Edge Watch tells the operator plainly when numbers are not live; old statuses here looked exactly like today's. This is the honest-data rule (no fake or misleading numbers).
+- **Trade-off:** sample data also starts showing the warning a few days after it was created. That is correct: it is old.
+
+### D-045 Toolbar on the 3D floor: Names, Stop turning, Whole floor (idea from Edge Watch's 3D machine view)
+- **What:** machine codes stand above the machines (on by default, `app.json` `showMachineNamesOnFloor`), coloured on the left by status. With a machine chosen only its own name shows. "Stop turning" pauses the slow circling. "Whole floor" goes back to the overview without scrolling to the close button.
+- **Why:** the owner found it unclear what to click; names connect the tiles to the 3D shapes. Edge Watch has the same buttons (part names, auto-rotate, reset view) on its 3D view.
+- **How:** the names are plain HTML moved over the canvas every frame, not drei `Html`, which crashed on unmount (D-014).
+- **Not taken:** free dragging of the camera. Clicking machines is the main action here, and dragging would fight the camera flights.
+
+### D-046 History: Download CSV (idea from Edge Watch's History export)
+- **What:** a "Download CSV" button on the History tab saves the records of the chosen dates (and machine) with date, shift, machine, status, times aborted, remarks, who entered it and whether it came from an upload or a hand edit. The file is made in the app (`shared/src/csv.ts`), so it works the same in both data modes.
+- **Why:** managers want the numbers in Excel for their own reports.
+- **Safety:** a cell starting with `=`, `+`, `-` or `@` gets a `'` in front so Excel never runs it as a formula. Remarks come from uploaded sheets and are not trusted. The file starts with a byte order mark so Excel reads non-English text correctly.
+
+### D-047 What else was looked at in the owner's other projects and not taken
+- **Looked at:** Edge Watch (predictive maintenance dashboard), the EdgeAI launcher page, the OEE page, the wheel assembly page, the hazardous zone detector.
+- **Not taken:** live clock and "connected" badge (Factory Atlas has no live data, so they would suggest something untrue); demo / what-if mode (sample data already covers demos); alerts with acknowledgement (no live alerts yet; a candidate for phase 14, live machine status); forecasts and health scores (phase 11 at the earliest, and only with real data).
+
