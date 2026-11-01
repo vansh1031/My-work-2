@@ -12,7 +12,7 @@ import { useConfig } from "../../config/ConfigProvider";
 import { setDebugInfo } from "../../lib/debug";
 import { loadCountries } from "./geoData";
 import { GlobeDirector } from "./globeDirector";
-import { atmosphere, builtInStyle, onlineStyle } from "./globeStyle";
+import { applyGlobeColors, builtInStyle, onlineStyle } from "./globeStyle";
 
 setWorkerUrl(new URL(workerUrl, window.location.href).href);
 
@@ -106,9 +106,9 @@ export function GlobeView({ factories, selectedId, onPick, bottomInset, onFail }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Light or dark switched while the globe is open: only the glow around the globe uses the page colour.
+  // Light or dark switched while the globe is open: recolour it in place.
   useEffect(() => {
-    if (ready) mapRef.current?.setSky(atmosphere(config.theme) ?? {});
+    if (ready && mapRef.current) applyGlobeColors(mapRef.current, config.theme);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, config.theme.mode]);
 

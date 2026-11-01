@@ -14,6 +14,15 @@ export interface Palette {
   focus: string;
 }
 
+export interface GlobeColors {
+  ocean: string; land: string; countryBorder: string; stateBorder: string; highlightFill: string;
+  highlightFillOpacity: number; highlightBorder: string; marker: string; markerRing: string;
+}
+
+export interface FloorColors {
+  floor: string; gridLine: string; machineBody: string; machineAccent: string;
+}
+
 export interface PublicConfig {
   branding: {
     companyName: string;
@@ -31,11 +40,11 @@ export interface PublicConfig {
     cornerRadiusPx: number;
     palettes: { dark: Palette; light: Palette };
     statusColors: Record<"running" | "stopped" | "aborted" | "shift_ended" | "unknown", string>;
-    globe: {
-      ocean: string; land: string; countryBorder: string; stateBorder: string; highlightFill: string;
-      highlightFillOpacity: number; highlightBorder: string; marker: string; markerRing: string;
-    };
-    factoryFloor: { floor: string; gridLine: string; machineBody: string; machineAccent: string };
+    globe: GlobeColors;
+    factoryFloor: FloorColors;
+    /** Used instead of globe / factoryFloor in the light scheme, if set. */
+    globeLight?: GlobeColors;
+    factoryFloorLight?: FloorColors;
   };
   animation: {
     reduceMotion: boolean;

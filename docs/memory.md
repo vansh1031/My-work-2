@@ -36,11 +36,11 @@ Last updated: 2026-10-31 (0.4.0)
 - The 3D views live in `web/src/views` and are shown through `components/ViewPanel.tsx`, which handles missing WebGL and failures (BG-001).
 - State outlines are one file per country in `web/public/geo/states/`; rebuild with `npm run geo` (scripts/build-geo.mjs).
 - MapLibre 6 needs `setWorkerUrl` (D-021). drei `Html` crashes on unmount (D-014); the 3D name tags are plain HTML moved each frame instead (D-045).
-- Screens read `config.theme.mode` from `useConfig()`: it is always the mode in use (dark or light), never "system" (D-043).
+- Screens read `config.theme.mode` from `useConfig()`: it is always the mode in use (dark or light), never "system". `config.theme.globe` and `factoryFloor` are already the colours for that mode (D-043).
 - Server mode: the server serves only files that existed when it started; restart it after rebuilding.
 
 ## Known issues
 - Browser mode: data lives in one browser on one computer; clearing site data deletes it.
 - First start in browser mode takes a few seconds (creating the database); about 4 MB is downloaded once.
 - On a 4K screen, software rendering (no graphics card) is slow; real graphics hardware is fine.
-- In light mode the built-in globe (used when the online map cannot load) and the 3D floor keep their dark colours; only the page around them changes.
+- The online map style (Liberty) is light in both schemes; only the built-in globe and the 3D floor switch colours.

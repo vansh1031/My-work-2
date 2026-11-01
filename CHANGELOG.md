@@ -4,13 +4,14 @@
 Ideas taken from the owner's other projects (Edge Watch and the EdgeAI launcher page).
 
 ### Added
-- Light / Dark button in the top bar and on the sign-in screen. The choice is kept in that browser. New settings: `theme.json` `allowUserSwitch`, and `mode` can be `system`.
+- Light / Dark button in the top bar and on the sign-in screen. The choice is kept in that browser. New settings: `theme.json` `allowUserSwitch`, `globeLight`, `factoryFloorLight`, and `mode` can be `system`. The built-in globe and the 3D floor have light colours too.
 - How old the statuses are: "Data from 30 Oct" on every factory row, with a warning when it is older than `app.json` `dataAgeWarningDays` (default 2). The factory pages show a banner then, with a link to upload the latest sheet.
 - 3D floor toolbar: machine names above the machines (`app.json` `showMachineNamesOnFloor`), Stop turning, and Whole floor.
 - History tab: Download CSV for the chosen dates and machine, safe to open in Excel.
 - The server sends `latestWorkDate` with each factory.
 
 ### Changed
+- The city name next to the globe pin is readable on light and dark maps.
 - The hint on the 3D floor now says "Click a machine here or in the list to see its details".
 
 ## 0.3.0 (2026-10-30)

@@ -20,6 +20,8 @@ describe("config", () => {
     const dir = copyConfig();
     const theme = JSON.parse(readFileSync(path.join(dir, "theme.json"), "utf8"));
     delete theme.allowUserSwitch;
+    delete theme.globeLight;
+    delete theme.factoryFloorLight;
     writeFileSync(path.join(dir, "theme.json"), JSON.stringify(theme));
     const app = JSON.parse(readFileSync(path.join(dir, "app.json"), "utf8"));
     delete app.dataAgeWarningDays;
@@ -27,6 +29,7 @@ describe("config", () => {
     writeFileSync(path.join(dir, "app.json"), JSON.stringify(app));
     const config = loadConfig(dir);
     expect(config.theme.allowUserSwitch).toBe(true);
+    expect(config.theme.globeLight).toBeUndefined();
     expect(config.app.dataAgeWarningDays).toBe(2);
     expect(config.app.showMachineNamesOnFloor).toBe(true);
   });

@@ -97,6 +97,7 @@ Not a config change: Admin, Factories and machines, Edit details, Shifts per day
 |---|---|
 | `mode` | `dark`, `light` or `system`: which palette is used when the person has not chosen one. `system` follows the computer's own light or dark setting. |
 | `allowUserSwitch` | `true`: a Light / Dark button in the top bar lets each person switch; their choice is kept in their browser. `false`: no button, everyone sees `mode`. Optional; older config folders get `true`. |
+| `globeLight`, `factoryFloorLight` | Same fields as `globe` and `factoryFloor`, used while the light scheme is on. Optional: without them the globe and floor keep their dark colours in light mode. |
 | `fontFamily` | CSS font list. Inter is bundled with the app. |
 | `cornerRadiusPx` | Corner rounding of buttons, cards and panels (0 to 16). Keep it small: no pill shapes. |
 | `palettes.dark`, `palettes.light` | `background`, `surface` (panels), `surfaceRaised` (cards), `border`, `text`, `textMuted`, `accent` (buttons, selection), `accentText`, `danger`, `focus`. |

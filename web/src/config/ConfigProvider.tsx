@@ -10,7 +10,8 @@ import { ConnectionScreen } from "../components/ConnectionScreen";
 
 export type ThemeMode = "dark" | "light";
 
-/** The config as the screens see it: theme.mode is always the mode in use right now, never "system". */
+/** The config as the screens see it: theme.mode is always the mode in use right now, never "system", and
+ *  theme.globe / theme.factoryFloor are the colours for that mode. */
 export type AppConfig = Omit<PublicConfig, "theme"> & { theme: Omit<PublicConfig["theme"], "mode"> & { mode: ThemeMode } };
 
 interface ConfigValue {
@@ -136,7 +137,11 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     if (!raw) return null;
     const fallback: ThemeMode = raw.theme.mode === "system" ? (systemDark ? "dark" : "light") : raw.theme.mode;
     const mode = raw.theme.allowUserSwitch && chosen ? chosen : fallback;
-    return { ...raw, theme: { ...raw.theme, mode } };
+    const t = raw.theme;
+    // In the light scheme the globe and floor use their light colours when the config has them.
+    const globe = mode === "light" ? (t.globeLight ?? t.globe) : t.globe;
+    const factoryFloor = mode === "light" ? (t.factoryFloorLight ?? t.factoryFloor) : t.factoryFloor;
+    return { ...raw, theme: { ...t, mode, globe, factoryFloor } };
   }, [raw, chosen, systemDark]);
 
   useEffect(() => {

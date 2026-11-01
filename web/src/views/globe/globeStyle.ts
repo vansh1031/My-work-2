@@ -1,7 +1,7 @@
 // The map style for the globe. "Built-in" draws the shipped country outlines in the theme colours and works without
 // map tiles. State outlines are added per country, only for the country the globe flies to (fa-states). When online tiles are on (config/app.json map.useOnlineTiles), the online style is used
 // as the base and the same factory and highlight layers are added on top.
-import type { StyleSpecification, LayerSpecification, SourceSpecification } from "maplibre-gl";
+import type { Map as MapLibreMap, StyleSpecification, LayerSpecification, SourceSpecification } from "maplibre-gl";
 import type { AppConfig } from "../../config/ConfigProvider";
 import type { GeoCollection } from "./geoData";
 
@@ -82,4 +82,23 @@ export async function onlineStyle(url: string, theme: AppConfig["theme"], timeou
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Light or dark switched while the globe is open: recolour it in place instead of rebuilding the map.
+ *  Built-in layers are recoloured only when they exist (the online style keeps its own colours). */
+export function applyGlobeColors(map: MapLibreMap, theme: AppConfig["theme"]) {
+  const g = theme.globe;
+  const paint: [string, Parameters<MapLibreMap["setPaintProperty"]>[1], string | number][] = [
+    ["ocean", "background-color", g.ocean],
+    ["land", "fill-color", g.land],
+    ["country-borders", "line-color", g.countryBorder],
+    ["fa-states", "line-color", g.stateBorder],
+    ["fa-highlight-fill", "fill-color", g.highlightFill],
+    ["fa-highlight-fill", "fill-opacity", g.highlightFillOpacity],
+    ["fa-highlight-line", "line-color", g.highlightBorder],
+    ["fa-factories", "circle-color", g.marker],
+    ["fa-factories", "circle-stroke-color", g.markerRing],
+  ];
+  for (const [layer, prop, value] of paint) if (map.getLayer(layer)) map.setPaintProperty(layer, prop, value);
+  map.setSky(atmosphere(theme) ?? {});
 }

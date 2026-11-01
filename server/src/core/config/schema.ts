@@ -30,6 +30,25 @@ const paletteSchema = z.object({
   focus: hexColor,
 });
 
+const globeColors = z.object({
+  ocean: hexColor,
+  land: hexColor,
+  countryBorder: hexColor,
+  stateBorder: hexColor,
+  highlightFill: hexColor,
+  highlightFillOpacity: opacity,
+  highlightBorder: hexColor,
+  marker: hexColor,
+  markerRing: hexColor,
+});
+
+const floorColors = z.object({
+  floor: hexColor,
+  gridLine: hexColor,
+  machineBody: hexColor,
+  machineAccent: hexColor,
+});
+
 export const themeSchema = z.object({
   // "system" follows the computer's light or dark setting.
   mode: z.enum(["dark", "light", "system"]),
@@ -45,23 +64,12 @@ export const themeSchema = z.object({
     shift_ended: hexColor,
     unknown: hexColor,
   }),
-  globe: z.object({
-    ocean: hexColor,
-    land: hexColor,
-    countryBorder: hexColor,
-    stateBorder: hexColor,
-    highlightFill: hexColor,
-    highlightFillOpacity: opacity,
-    highlightBorder: hexColor,
-    marker: hexColor,
-    markerRing: hexColor,
-  }),
-  factoryFloor: z.object({
-    floor: hexColor,
-    gridLine: hexColor,
-    machineBody: hexColor,
-    machineAccent: hexColor,
-  }),
+  globe: globeColors,
+  factoryFloor: floorColors,
+  // Used instead of globe / factoryFloor while the light scheme is on. Optional: without them the globe and
+  // floor keep the colours above in both schemes.
+  globeLight: globeColors.optional(),
+  factoryFloorLight: floorColors.optional(),
 });
 
 export const animationSchema = z.object({

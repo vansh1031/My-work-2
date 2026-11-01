@@ -52,5 +52,22 @@
     "gridLine": "#2a3542",
     "machineBody": "#9aa7b4",
     "machineAccent": "#4a5866"
+  },
+  "globeLight": {
+    "ocean": "#cfdeec",
+    "land": "#f6f8fa",
+    "countryBorder": "#97a8ba",
+    "stateBorder": "#bccad8",
+    "highlightFill": "#0969da",
+    "highlightFillOpacity": 0.18,
+    "highlightBorder": "#0969da",
+    "marker": "#ffffff",
+    "markerRing": "#0969da"
+  },
+  "factoryFloorLight": {
+    "floor": "#dfe5ec",
+    "gridLine": "#c3ccd6",
+    "machineBody": "#7d8995",
+    "machineAccent": "#aeb9c4"
   }
 }

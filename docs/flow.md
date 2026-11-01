@@ -65,7 +65,8 @@ App
       fails -> ConnectionScreen        "Cannot connect" (server mode) or "Cannot start" (browser mode), with the error code
       ok    -> applyBranding(): title, favicon (lib/fileUrl.ts)
             -> light or dark: the choice saved in this browser ("factory-atlas.theme", only if theme.allowUserSwitch),
-               else theme.mode ("system" follows the computer). The screens get config.theme.mode = the mode in use.
+               else theme.mode ("system" follows the computer). The screens get config.theme.mode = the mode in use,
+               and config.theme.globe / factoryFloor = globeLight / factoryFloorLight in light mode (if set).
             -> applyTheme(): CSS variables and <html data-theme>; runs again when the mode changes
                (ThemeSwitch button in the top bar, components/AppShell.tsx -> setThemeMode())
   AuthProvider                         web/src/auth/AuthProvider.tsx
@@ -103,6 +104,7 @@ HomePage                               web/src/pages/HomePage.tsx
       new MapLibreMap(online style, or builtInStyle(countries) if offline)
       on "load" -> new GlobeDirector(...)       globeDirector.ts
       when selectedId changes: director.showFactory(factory) or director.clearSelection()
+      when light / dark changes: applyGlobeColors(map, theme)   globeStyle.ts, recolours in place
       a pin is clicked -> onPick(id) -> select(id)
     map-card (selected factory)                 "Open factory" -> /factories/3
 

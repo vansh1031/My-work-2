@@ -191,7 +191,8 @@ Format: **What** / **Why** / **Trade-off accepted**.
 ### D-043 Light and dark switch in the top bar (idea from the EdgeAI launcher page)
 - **What:** a Light / Dark button in the top bar, also on the sign-in screen. The choice is kept in that browser. `theme.json` `mode` is the default and can now also be `system` (follow the computer). `allowUserSwitch: false` hides the button for a client who wants one fixed look.
 - **Why:** the owner's EdgeAI launcher page already does this, so their clients will expect the same. Bright factory offices often need the light scheme; control rooms prefer dark.
-- **Trade-off:** the globe (built-in style) and the 3D floor keep their own colours from `theme.json` in both schemes; only the page around them changes. The online map style is light anyway.
+- **Light globe and floor (added after the first review):** `theme.json` `globeLight` and `factoryFloorLight` give the built-in globe and the 3D floor their own light colours. Switching recolours the open globe in place (`applyGlobeColors`), so the camera does not jump. Both are optional; a client config without them keeps the dark globe and floor in light mode.
+- **Trade-off:** the online map style keeps its own colours in both schemes (it is light anyway).
 
 ### D-044 Show how old the statuses are (idea from Edge Watch's data status banner)
 - **What:** the factory list shows "Data from 30 Oct" on every row, with a warning sign when it is older than `app.json` `dataAgeWarningDays` (default 2). The factory pages show a banner then, with a link to upload the latest sheet for people allowed to upload. The server sends `latestWorkDate` with each factory.
